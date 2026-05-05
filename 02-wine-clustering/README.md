@@ -1,7 +1,7 @@
 2. Distance based Clustering of Wine Cultivars
 ================
 Georgios Papadopoulos
-09-10-2025
+2025-10-09
 
 # Preparation
 
@@ -127,7 +127,7 @@ main = "mahalanobis distances",
 ylab = "distance")
 ```
 
-![](analysis_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+![](figures/unnamed-chunk-6-1.png)<!-- -->
 
 # 4. Mahalanobis and Euclidean distance comparison
 
@@ -189,7 +189,7 @@ main = "mahalanobis vs euclidean distances",
 ylab = "distance")
 ```
 
-![](analysis_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+![](figures/unnamed-chunk-8-1.png)<!-- -->
 
 # 5. Role of variable transformations in clustering
 
@@ -226,7 +226,7 @@ rect.hclust(hcluster_wine, k = 3, border = "red")
 legend("right", levels(grp), fill = c("red","blue","green"))
 ```
 
-![](analysis_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+![](figures/unnamed-chunk-9-1.png)<!-- -->
 
 The hierarchical clustering created a dendrogram with three main
 branches. The branches somewhat correspond to the three wine groups.

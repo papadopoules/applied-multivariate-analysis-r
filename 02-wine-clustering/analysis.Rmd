@@ -2,14 +2,15 @@
 title: "2. Distance based Clustering of Wine Cultivars"
 subtitle: "Scaling, Mahalanobis Distance, hierarchical clustering, and k-means in R"
 author: "Georgios Papadopoulos"
-date: "09-10-2025"
+date: "2025-10-09"
 output:
   github_document:
   fig_path: "figures/"
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = FALSE,warning = FALSE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE,warning = FALSE, fig.path ="figures/"
+)
 ```
 
 # Preparation
