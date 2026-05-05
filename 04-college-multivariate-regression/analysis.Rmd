@@ -1,0 +1,264 @@
+---
+title: "Multivariate regression for college admissions outcomes"
+subtitle: "Section 4"
+author: "Georgios Papadopoulos"
+date: "2025-10-25"
+output: github_document
+---
+
+*Joint prediction of acceptance, enrollment, and academic profile metrics using multivariate linear models in R*
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE, 
+  message = FALSE,
+  warning = FALSE,
+  fig.path = "figures/"
+  )
+```
+
+# 1. Visual inspection and preprocessing
+
+From Str and Summary we know that we have 777 obs of 18 variables, `private` is a factor with Yes/No whereas the rest are numerical variables. We do not have missing values.
+
+```{r}
+library(ISLR)
+data(College)
+#?College
+#str(College)
+#summary(College)
+#anyNA(College)
+```
+
+Histograms help to inspect the distributions of numeric variables. Variables "Apps", "Accept", "Enroll", "F.Undergrad", "P.Undergrad", "Books", "Personal", "Expend" show skewed distributions and a few extreme outliers, suggesting that log transformations are appropriate prior to regression modeling.
+
+```{r}
+par(mfrow = c(3, 3))
+College_num <- College[,2:18]
+
+for (v in names(College_num)) {
+  hist(College_num[[v]], main = v, xlab = "") 
+  }
+```
+
+The variable `Private` was converted to a factor to ensure that it is treated as categorical in next analyses. To stabilize variance and reduce skewness, the skewed variables were transformed using the natural logarithm with a x+1 offset (log1p) which safely handles potential zero values.
+
+After transformation, the affected variables were renamed by appending the suffix “\_log” (e.g., Expend_log.
+
+```{r}
+college_transformed <- College
+college_transformed$Private <- as.factor(college_transformed$Private)
+
+skewed_vars <- c("Apps", "Accept", "Enroll", "F.Undergrad", "P.Undergrad", "Books",
+                 "Personal", "Expend")
+
+college_transformed[skewed_vars] <- lapply(college_transformed[skewed_vars], log1p)
+names(college_transformed)[names(college_transformed) %in% skewed_vars] <-
+  paste0(skewed_vars, "_log")
+
+# Scale all numeric variables (recommended before multivariate regression / CV)
+#num_vars <- sapply(college_transformed, is.numeric)
+#college_transformed[num_vars] <- scale(college_transformed[num_vars])
+```
+
+With the new distributions we see that skewness is fixed.
+
+```{r}
+par(mfrow = c(3, 3))
+
+for (v in names(college_transformed)[sapply(college_transformed, is.numeric)]) {
+  hist(college_transformed[[v]], main = v, xlab = "")
+}
+```
+
+The boxplots show systematic level differences between private and public university, with private colleges generally showing higher values. These differences are consistent as expected and will be preserved in the modeling process rather than treated as outliers.
+
+```{r}
+
+par(mfrow = c(2, 5))
+
+for (v in names(college_transformed)[sapply(college_transformed, is.numeric)]) {
+  boxplot(college_transformed[[v]] ~ college_transformed$Private,
+          main = v, xlab = "", ylab = "", col = c("green3", "red1"))
+}
+```
+
+# 2. Training and test split
+
+Setting seed to ensure reproducibility of random split, then for n=777 obs I randomly pick 2/3 of n indices for training, and the rest of the indices are for testing the df. `train` df has 518 obs and `test` has 259 obs. To prepare for model fitting for task 3, I checked the proportions of our factor `private` which looks decently splitted up.
+
+```{r}
+set.seed(123)
+
+n <- nrow(college_transformed)
+train_index <- sample(1:n, size = 2/3 * n)
+
+train <- college_transformed[train_index, ]
+test  <- college_transformed[-train_index, ]
+nrow(train) 
+nrow(test) 
+summary(train$Private)
+summary(test$Private)
+```
+
+# 3. Joint linear model for multiple admission outcomes
+
+The model predicts `Accept_log` and `Enroll_log` very well with multiple $R^2$ 0.9618 and 0.9505 respectively, but `Top10perc` and `Top25perc` are harder to explain as multiple $R^2$ are moderate of 0.6073 and 0.5362 respectively. This suggests that admission and enrollment are well captured by our variables, but top student percentages depend on additional unobserved factors we dont see here.
+
+The overall F statistics for each regression equation are large with all p-values \< 0.001 which shows that the joint predictors explain a significant amount of variance.
+
+Across the four equations, the most statistically significant predictors are `Apps_log`, `F.Undergrad_log`, and `Expend_log`, each showing p \< 0.001. The number of applications and fulltime students and expenditure per student show a strong positive influence on the joint predictors.
+
+```{r}
+
+model_lm <- lm(cbind(Accept_log, Enroll_log, Top10perc, Top25perc) ~ ., data = train)
+
+summary(model_lm)
+```
+
+# 4. MANOVA-based model assessment
+
+While lm() fits separate regressions for each response variable, manova() fits one combined model and tests whether the predictors have a joint effect on all responses together.
+
+Almost all predictors have p \< 0.001 (\*\*\*), meaning they jointly influence the responses. The largest multivariate effects (highest Pillai values) are for `Apps_log`, `Private`, `F.Undergrad_log`, meaning the most influential predictors overall. Only a few variables, such as `Personal_log`, lack significant multivariate influence.
+
+```{r}
+model_manova <- manova(cbind(Accept_log, Enroll_log, Top10perc, Top25perc) ~ ., data = train)
+
+summary(model_manova)
+```
+
+# 5. Significance-based submodel construction
+
+To create a model based on all variables which a specific significance, we look at the significance levels and stars. Each predictor can differ in significance across the four response equations, so I kept the variables that were significant in at least one outcome.
+
+This approach is wrong because now we selected variables only based on their p-values. Significance tests measure inference namely whether a relationship likely exists in the population. This doesnt say how well a variable improves prediction on new data. Some variables that are not significant can still help predict, while others could appear significant only by chance.
+
+A better way to build a predictive submodel is to use cross validation because it doesnt use p-values. CV splits the data into training and validation parts several times to test how well the model predicts unseen data. This gives a more realistic measure of performance and helps find models that generalize well rather than just fitting random noise. After the best model is chosen, it can be evaluated on a separate test set to estimate its final predictive accuracy on completely new data. This process reduces overfitting and leads to more reliable model selection.
+
+## 5% significance level
+
+The 5% model includes all predictors with p \< 0.05, namely `***`, `**`, `*`
+
+```{r}
+model_5 <- lm(cbind(Accept_log, Enroll_log, Top10perc, Top25perc) ~ 
+                Private + Apps_log + F.Undergrad_log + Outstate + Room.Board + Books_log +
+                PhD + perc.alumni + Expend_log + Grad.Rate,
+              data = train)
+summary(model_5)
+```
+
+## 1% significance level
+
+The 1% model includes those with p \< 0.01, , namely `***`, `**` therefore I removed `private`, `perc.alumni`
+
+```{r}
+model_1 <- lm(cbind(Accept_log, Enroll_log, Top10perc, Top25perc) ~ 
+                Apps_log + F.Undergrad_log + Outstate + Room.Board +  Books_log + PhD +
+                Expend_log + Grad.Rate,
+              data = train)
+summary(model_1)
+```
+
+# 6. Nested model comparison with ANOVA
+
+The ANOVA comparison shows very small p-values (p \< 0.001) when comparing the full model to the reduced 5% and 1% models. This means that each time predictors are removed, the model’s ability to explain variation in the four response variables decreases significantly from full model to 5% significance and from 5% significance variables only to 1% significance.
+
+The residual degrees of freedom increases as predictors are removed which shows the loss of parameters when simplifying the model. The column Df shows the number of predictors removed between models.
+
+The Pillai values describe the joint effect of the predictors that were dropped between models.
+
+-   The predictors removed in the 5% model jointly explained \~8% of the variance.
+-   The additional predictors removed in the 1% model jointly explained \~6% of the variance.
+
+Although these values are small, the associated approximate F-statistics and very small p-values show that the reductions in model complexity lead to a loss of explanatory power.
+
+```{r}
+anova( model_1, model_5,model_lm)
+```
+
+**Statistical requirements:** For the ANOVA comparisons to be valid the models must be nested and fitted on the same dataset which basically means that the same dataset created all 3 models and one model is a simpler version of the other. Another requirement is that our obs are independent because it prevents biased standard errors. Relationships between predictors and responses should be roughly linear because strong nonlinear patterns would violate the assumptions of the linear model regression. Homoscedasticity requires that the residuals have constant variance and covariance across all levels of the predictors because it ensures that errors are evenly distributed.
+
+# 7. Cross-validation-based model comparison
+
+After setting a random seed, a response matrix Y containing the four dependent variables was created. A 10-fold cross-validation repeated 100 times was then applied to the training data. In each repetition, the training data were randomly split into 10 folds, the model was fitted on K-1=9 folds and validated on the remaining fold.
+
+```{r}
+library(cvTools)
+
+set.seed(123)
+Y_train <- cbind(train$Accept_log, train$Enroll_log, train$Top10perc, train$Top25perc)
+
+cv_full <- cvFit(model_lm, y= Y_train, data = train, K = 10, R = 100)
+cv_5    <- cvFit(model_5, y= Y_train, data = train, K = 10, R = 100)
+cv_1    <- cvFit(model_1, y= Y_train, data = train, K = 10, R = 100)
+
+cv_errors <- data.frame(
+  Full = cv_full$reps,
+  Model_5 = cv_5$reps,
+  Model_1 = cv_1$reps
+)
+
+boxplot(cv_errors,
+        names = c("Full model", "5% model", "1% model"),
+        main = "Cross-Validation Prediction Errors (10-fold x 100)",
+        ylab = "Prediction error (rmspe)"
+        )
+
+apply(cv_errors, 2, sd)
+```
+
+The cross-validation results show clear differences in predictive accuracy. The full model achieves the lowest mean RMSPE of 18.4, followed by the 5 % model of 18.6 and the 1 % model of 18.8. Standard deviation is around 0.05 meaning that prediction variability is low across all models thus stable results. We conclude that the full model provides the best overall predictive performance.
+
+The prediction error is computed by the *root mean squared prediction error RMSPE*:
+
+$$
+RMSPE = \sqrt{\frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2}
+$$
+
+For each cross validation repetition, the data are split into 10 folds; the model is fitted on K - 1 folds and used to predict the 1 last fold. The squared differences between observed $y_i$ and predicted $\hat{y}_i$ values are averaged across all validation folds, and their square root gives the RMSPE. Repeating this procedure 100 times yields the distribution of prediction errors stored in the `$reps` component.
+
+# 8. Test set prediction and graphical evaluation
+
+The best model is the complete full one, and the worst at the 1% significance level.
+
+```{r}
+best_model <- lm(cbind(Accept_log, Enroll_log, Top10perc, Top25perc) ~ ., data = train)
+
+worst_model <- lm(cbind(Accept_log, Enroll_log, Top10perc, Top25perc) ~ 
+                      Private + Apps_log + F.Undergrad_log + Expend_log + Grad.Rate, data = train)
+
+pred_best <- predict(best_model, newdata = test)
+pred_worst <- predict(worst_model, newdata = test)
+```
+
+The graphs indicate that removing less significant predictors had little impact on test performance. The reduced model achieves almost the same accuracy with fewer variables, suggesting that the excluded predictors added minimal predictive value. To double check, I calculated the prediction error for "Accept_log", "Enroll_log", "Top10perc", "Top25perc". Worst model has marginally higher prediction errors but still identical.
+
+```{r}
+response_names <- c("Accept_log", "Enroll_log", "Top10perc", "Top25perc")
+
+par(mfrow = c(2, 2))
+for (i in 1:4) {
+  plot(test[[response_names[i]]], pred_best[, i],
+       main = paste("Best model:", response_names[i]),
+       xlab = "Observed", ylab = "Predicted")
+  abline(0, 1, col = "green3", lwd = 2)
+}
+
+
+par(mfrow = c(2, 2))
+for (i in 1:4) {
+  plot(test[[response_names[i]]], pred_worst[, i],
+       main = paste("Worst model:", response_names[i]),
+       xlab = "Observed", ylab = "Predicted")
+  abline(0, 1, col = "red1", lwd = 2)
+}
+
+
+```
+
+```{r}
+rmspe <- function(y_true, y_pred) sqrt(mean((y_true - y_pred)^2))
+sapply(1:4, function(i) rmspe(test[[response_names[i]]], pred_best[, i]))
+sapply(1:4, function(i) rmspe(test[[response_names[i]]], pred_worst[, i]))
+```
