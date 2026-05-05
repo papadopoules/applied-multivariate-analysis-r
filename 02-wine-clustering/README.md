@@ -1,4 +1,4 @@
-2. Distance based Clustering of Wine Cultivars
+Distance based clustering of wine cultivars
 ================
 Georgios Papadopoulos
 2025-10-09

@@ -1,18 +1,18 @@
 ---
-title: "Exploratory Multivariate Analysis of the Iris Dataset"
-subtitle: "Exercise 1"
+title: "Exploratory multivariate analysis of the iris dataset"
+subtitle: "Section 1"
 author: "Georgios Papadopoulos"
 date: "2025-10-05"
 output: github_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, fig.path = "figures/")
 ```
 
 # Introduction
 
-This report presents a compact multivariate analysis of the classic `iris` dataset. The goal is to explore relationships between variables, summarize key statistical properties, 
+This report presents a compact multivariate analysis of the classic `iris` dataset. The goal is to explore relationships between flower variables, summarize key statistical properties, 
 and verify fundamental results from multivariate theory using empirical data.
 
 # Dataset Overview

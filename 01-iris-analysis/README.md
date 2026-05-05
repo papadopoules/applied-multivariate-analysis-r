@@ -1,4 +1,4 @@
-Exploratory Multivariate Analysis of the Iris Dataset
+Exploratory multivariate analysis of the iris dataset
 ================
 Georgios Papadopoulos
 2025-10-05
@@ -6,9 +6,9 @@ Georgios Papadopoulos
 # Introduction
 
 This report presents a compact multivariate analysis of the classic
-`iris` dataset. The goal is to explore relationships between variables,
-summarize key statistical properties, and verify fundamental results
-from multivariate theory using empirical data.
+`iris` dataset. The goal is to explore relationships between flower
+variables, summarize key statistical properties, and verify fundamental
+results from multivariate theory using empirical data.
 
 # Dataset Overview
 
@@ -49,7 +49,7 @@ variables in the iris dataset.
   be because of the different species cluster around the distinct size
   range till 2 cm for petal length.
 
-![](01-iris-analysis_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+![](figures/unnamed-chunk-3-1.png)<!-- -->
 
 ### Scatterplot of pairwise relationships
 
@@ -63,7 +63,7 @@ species. Black for setosa, red forversicolor and green for virginica.
 - Setosa appears clearly distinct from versicolor and virginica, because
   the other two partially overlap.
 
-![](01-iris-analysis_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+![](figures/unnamed-chunk-4-1.png)<!-- -->
 
 ### Boxplot group comparisons
 
@@ -78,7 +78,7 @@ across the three iris species.
 - The sepal part of the flowers overlap more, especially between
   versicolor and virginica.
 
-![](01-iris-analysis_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](figures/unnamed-chunk-5-1.png)<!-- -->
 
 # Descriptive Statistics
 
@@ -194,7 +194,7 @@ cor_matrix <- cor(iris[, 1:4])
 corrplot(cor_matrix)
 ```
 
-![](01-iris-analysis_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+![](figures/unnamed-chunk-11-1.png)<!-- -->
 
 # Standardization and Covariance Transformation
 

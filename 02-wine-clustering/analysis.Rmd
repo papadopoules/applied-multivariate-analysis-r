@@ -1,5 +1,5 @@
 ---
-title: "2. Distance based Clustering of Wine Cultivars"
+title: "Distance based clustering of wine cultivars"
 subtitle: "Scaling, Mahalanobis Distance, hierarchical clustering, and k-means in R"
 author: "Georgios Papadopoulos"
 date: "2025-10-09"
