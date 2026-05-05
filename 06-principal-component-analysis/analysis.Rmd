@@ -1,26 +1,28 @@
 ---
-title: "UE Multivariate Statistics"
+title: "Principal component analysis for wine and spectral data"
 subtitle: "Section 6"
 author: "Georgios Papadopoulos"
-date: "08-11-2025"
-output: 
-  pdf_document: 
-    latex_engine: xelatex
+date: "2025-11-08"
+output: github_document
 ---
+
+*Dimensionality reduction and score interpretation using standardized wine profiles and NIR spectra*
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = TRUE, 
   message = FALSE,
   warning = FALSE,
-  out.width  = "80%",
-  fig.align = "center"
+  fig.align = "center",
+  fig.path = "figures/"
   )
 ```
 
-# Task 1 a
+# 1. PCA of standardized wine characteristics
 
 We performed a principal component analysis on the standardized wine data using princomp() with the correlation matrix option. I ran PCA on standardized data by excluding `Cult`
+
+## 1.1 Variance explained by principal components
 
 The output shows that the first few principal components explain most of the total variance, suggesting a strong dimensional reduction potential. The first component explains 36.2% of total variance, the second 19.2%, and the first three together 66.5%. Five components already capture 80%, while the remaining ones contribute little.
 
@@ -38,7 +40,7 @@ plot(pca_wine, npcs=13)
 
 ```
 
-# Task 1 b
+## 1.2 Interpretation of the first two loading vectors
 
 Names of each can be found here `?wine`.
 
@@ -60,7 +62,7 @@ text(colMeans(barplot1b), -0.05, labels = rownames(loadings_df), xpd = TRUE)
 legend("topright",legend = colnames(loadings_df), fill = c("darkgreen", "lightgreen"),title = "Components", bty = "n", cex = 0.7,pt.cex = 0.7)
 ```
 
-# Task 1 c
+## 1.3 Score plot by wine cultivar
 
 We stay again with the first 2 components by extracting and plotting the scores of them.
 
@@ -84,7 +86,7 @@ legend("right", legend = levels(wine$Cult),
 
 ```
 
-# Task 1 d
+## 1.4 Robust PCA with princomp
 
 The standard PCA computed with `princomp()` relies on the classical sample covariance matrix, which assumes that the data are normally distributed and free of outliers. However, when a dataset contains extreme or atypical observations, these points can distort the covariance structure and thus the direction of the principal components.
 
@@ -92,7 +94,7 @@ To make PCA more resistant to such distortions, a robust covariance estimator ca
 
 By supplying this robust covariance matrix to the PCA computation, the resulting robust principal components reflect the dominant structure of the majority of the data rather than being influenced by a few extreme values. This approach is particularly useful when working with unusual samples that could heavily bias the results.
 
-# Task 2 a
+# 2. PCA of NIR spectra from PET yarns
 
 The yarn dataset contains measurements from 28 yarn samples analyzed using Near Infrared (NIR). For each of the 28 yarns there are 268 different NIR wavelengths, stored as a matrix in the variable `yarn$NIR`. The dataset includes `yarn$density` as a numeric value for each yarn how dense it is, and `yarn$train` that shows whether the sample belongs to the training or test subset.
 
@@ -101,6 +103,8 @@ library(pls)
 data("yarn")
 str(yarn)
 ```
+
+# 2.1 Visualization of raw spectra
 
 Each of the 28 yarn samples appears as a smooth curve showing NIR intensity across 268 wavelengths. All yarns follow a similar shape, which reflects their common PET composition. Small differences in intensity are visible between samples. These subtle differences are what PCA will capture as the main sources of variation in the dataset.
 
@@ -111,13 +115,13 @@ matplot(t(yarn$NIR), type = "l", lty = 1,
         main = "NIR spectra of 28 yarns")
 ```
 
-# Task 2 b
+# 2.2 Visualization of centered and scaled spectra
 
 After centering and scaling the plot shows all 28 yarn spectra now centered around zero. Because each wavelength variable was standardized to have equal variance, the curves overlap more densely and appear less smooth. I expected this because scaling removes the absolute intensity differences and focuses only on relative variation around the mean spectrum.
 
 Scaling is important because it ensures that all wavelengths contribute equally to the PCA. Without scaling, high variance wavelength regions like 100–150 would dominate the components which causes PCA to reflect differences in magnitude rather than overall curve form. By centering and scaling, the analysis focuses instead on the relative patterns and shapes of the spectra across yarns, which is more appropriate for interpreting chemical or structural variation.
 
-However in this case, scaling means we lose the variation around all wavelengths, for example we know from 1 a that most variation that would PCA show as is around 0-35 wavelenth and then afain from 75 -150 wavelentghs. With scaling it looks messier and it would also give a chance for PCA to include the wavelengths between 150-268 which in 1 a we see they dont have enough variance for us to get significant information for PCA. So long story short, we dont use scale.
+However in this case, scaling means we lose the variation around all wavelengths, for example we know from 1 a that most variation that would PCA show as is around 0-35 wavelenth and then afain from 75 -150 wavelentghs. With scaling it looks messier and it would also give a chance for PCA to include the wavelengths between 150-268 which in 1 a we see they dont have enough variance for us to get significant information for PCA. So long story short, scaling may not be preferable here.
 
 ```{r}
 matplot(t(scale(yarn$NIR)), type = "l", lty = 1,
@@ -126,7 +130,7 @@ matplot(t(scale(yarn$NIR)), type = "l", lty = 1,
         main = "Centered and scaled NIR spectra")
 ```
 
-# Task 2 c
+# 2.3 Limitations of princomp for high-dimensional spectra
 
 I attempted to compute the PCA using `princomp(yarn$NIR)`. This resulted in an error message indicating that it can only be used with more units than variables.
 
@@ -141,7 +145,7 @@ With following snippet I show that it is indeed a singular eigenvector.
 #eigen(cov_yarn)$values
 ```
 
-# Task 2 d
+# 2.4 PCA with prcomp and loading interpretation
 
 prcomp() works because it does not require inverting the covariance matrix. Instead, it directly decomposes the yarn data matrix X into: $$
 X = U D V^{\top} $$
@@ -171,7 +175,7 @@ legend("topright", legend = c("PC1", "PC2"), col = 1:2, lty = 1)
 
 ```
 
-# Task 2 e
+# 2.5 Relationship between PCA scores and yarn density
 
 In the PC1 vs density plot, yarns with lower density have the highest PC1 scores, while those with higher density show much lower PC1 scores.
 This indicates a negative relationship between density and the PC1.
@@ -194,10 +198,8 @@ plot(yarn$density, pca_yarn$x[, 2],
      xlab = "Density", ylab = "PC2 score",
      main = "PC2 vs density")
 
-
 ```
 
-
-# Task 2 f
+# 2.6 Robust PCA with prcomp
 
 The standard `prcomp()` computes PCA using the classical covariance structure which is sensitive to outliers. To obtain robust principal components we could first compute a robust covariance matrix using the Minimum Covariance Determinant MCD estimator from the `robustbase` package and then use this matrix as the basis for PCA. 
