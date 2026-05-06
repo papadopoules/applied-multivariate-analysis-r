@@ -1,0 +1,315 @@
+---
+title: "Discriminant analysis for multiclass classification"
+subtitle: "Section 12"
+author: "Georgios Papadopoulos | "
+date: "2026-01-14"
+output: github_document
+knit: >
+  (function(inputFile, encoding) {
+    rmarkdown::render(
+      inputFile,
+      encoding = encoding,
+      output_format = "github_document",
+      output_file = "README.md"
+    )
+  })
+---
+
+*Applying LDA, QDA and PCA assisted discriminant analysis to letter recognition and high dimensional cancer classification*
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE, 
+  message = FALSE,
+  warning = FALSE,
+  fig.align = "center",
+  fig.path = "figures/"
+  )
+```
+
+## 1. Letter recognition with discriminant analysis
+
+```{r data loading}
+
+library(mlbench)
+library(MASS)
+library(ggplot2)
+
+data(LetterRecognition)
+#?LetterRecognition
+
+train <- LetterRecognition[1:16000, ]
+test  <- LetterRecognition[16001:20000, ]
+```
+
+### 1.1 Linear discriminant analysis on the test set
+
+I set `newdata = test` 
+
+```{R LDA}
+lda_fit <- lda(lettr ~ ., data = train)
+
+lda_predict <- predict(lda_fit, newdata = test)$class
+```
+
+On the first look the confusion matrix shows correct input but it is not helping because of its size with the whole alphabet. Therefore I did a vizualization down below. Altogether the goal is to the misclassified ones which are outside of the diagonal.
+
+```{R confusion matrix}
+
+confusion_matrix <- table(True = test$lettr, Predicted = lda_predict)
+confusion_matrix
+
+```
+
+Now it is very obvious to see the worst misclassified letters. I set the frequency for the red tiles bigger than 15. I see in red that the obvious ones are:
+Z with S
+Y with V
+K with R
+O with H
+G with C
+
+It makes sense because of their similar shape.
+
+```{r LDA confusion matrix viz}
+
+ggplot(as.data.frame(confusion_matrix),
+       aes(Predicted, True, fill = Freq)) +
+  geom_tile(color = "white") +
+
+  # highlight everything over 15
+  geom_tile(
+    data = subset(as.data.frame(confusion_matrix), Freq > 15 & True != Predicted),
+    fill = "red",
+    alpha = 0.6
+  ) +
+
+  scale_fill_gradient(low = "white", high = "black") +
+  labs(
+    title = "LDA confusion matrix",
+    subtitle = "Cells with frequency > 15 highlighted in red",
+    fill = "Count"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text())
+
+```
+
+The misclassification rate is 31%, so I interpret it as moderate classification performance. The correct classifications therefore are 69%.
+
+```{R misclassification rate}
+
+misclass_rate <- mean(lda_predict != test$lettr)
+misclass_rate
+
+```
+
+
+### 1.2 Fisher discriminant directions for letters
+
+The first two Fisher discriminant directions visualize the projection that maximizes the separation between each group relative to within group variance.
+
+Some letters form well separated clusters and are easy to distinguish like:
+M
+W
+V
+N
+A
+L
+
+The letters that looks similar have clusters that overlap like:
+Z with S
+Y with V
+K with R
+O with H
+G with C
+
+
+```{r Fishers discriminant direction}
+
+lda_fit <- lda(lettr ~ ., data = train)
+lda_train <- predict(lda_fit, newdata = train)   
+
+plot(lda_train$x[,1], lda_train$x[,2],
+     type = "n",
+     xlab = "LD1", ylab = "LD2",
+     main = "Fisher LDA: first two discriminant directions")
+
+text(lda_train$x[,1], lda_train$x[,2],
+     labels = train$lettr,
+     col = as.integer(train$lettr),
+     cex = 0.6)
+
+
+```
+
+### 1.3 Quadratic discriminant analysis on the test set
+
+QDA shows a lower misclassification rate than LDA because it allows class specific covariance matrices for each letter, whereas LDA assumes equal covariance across all letters. This additional flexibility leads to quadratic decision boundaries that better adapt to differences in variance and correlation structures between letters.
+
+The risk however is overfitting in small samples.
+
+```{R QDA}
+
+qda_fit <- qda(lettr ~ ., data = train)
+
+qda_pred <- predict(qda_fit, newdata = test)$class
+
+confusion_matrix_qda <- table(True = test$lettr, Predicted = qda_pred)
+confusion_matrix_qda
+
+```
+
+Compared to 1a we can clearly see that for frequency bigger than 15 there is only one clear misclassification worst offender for letter Y with V.
+
+```{r QDA confusion matrix viz}
+
+ggplot(as.data.frame(confusion_matrix_qda),
+       aes(Predicted, True, fill = Freq)) +
+  geom_tile(color = "white") +
+
+  geom_tile(
+    data = subset(as.data.frame(confusion_matrix_qda),
+                  Freq > 15 & True != Predicted),
+    fill = "red",
+    alpha = 0.6
+  ) +
+
+  scale_fill_gradient(low = "white", high = "black") +
+  labs(
+    title = "QDA confusion matrix",
+    subtitle = "Off-diagonal cells with frequency > 15 highlighted in red",
+    fill = "Count"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text())
+
+
+```
+
+This good classification above is further confirmed with the lower misclassification rate of 12.5%.
+
+```{r misclassification rate QDA}
+
+misclass_rate_qda <- mean(qda_pred != test$lettr)
+misclass_rate_qda
+
+```
+
+### 1.4 Limitations of QDA for Fisher direction visualization
+
+QDA prediction does not contain $x Fisher's linear discriminant function scores.
+
+Because QDA allows class-specific covariance matrices, there is no common linear projection that maximizes the separation between letters. Therefore a plot of the first two discriminant directions cannot be produced in the same way as for LDA.
+
+```{r}
+qda_pred <- predict(qda_fit, train)
+summary(qda_pred)
+```
+
+## 2. PCA-assisted LDA for high-dimensional cancer classification
+
+The Khan dataset consists of training and test sets. Gene expression levels for 2308 genes are available for 63 training subjects (xtrain), with corresponding tumor labels (ytrain), and for 20 test subjects (xtest, ytest).
+
+```{r Task2 data}
+library(ISLR)
+data(Khan)
+#?Khan
+```
+
+We varied the number of retained principal components from 1 to 62. For each value of k, the training data were projected onto the first k principal components and classified using linear discriminant analysis with leave one out cross validation.
+
+### 2.1 Selecting the number of principal components
+
+Scaling is not needed because the data provided are genes that are compared to each other. 
+
+```{r PCA}
+pca_train <- prcomp(Khan$xtrain, center = TRUE, scale. = FALSE)
+
+max_k <- 62
+error_rate <- numeric(max_k)
+
+for (k in 1:max_k) {
+  
+  Xk <- pca_train$x[, 1:k, drop = FALSE]
+  
+  lda_cv <- lda(Xk, grouping = Khan$ytrain, CV = TRUE)
+  
+  error_rate[k] <- mean(lda_cv$class != Khan$ytrain)
+}
+```
+
+The misclassification rate is high for very small values of k, decreases for intermediate values, and increases again as k approaches the maximum. Too few components lead to underfitting, while too many components reintroduce noise and unstable covariance estimation. The lowest error is achieved for k=10 components.
+
+```{r plot for PCS}
+plot(1:max_k, error_rate, pch=20,
+     xlab = "Number of principal components k",
+     ylab = "Leave one out error rate",
+     main = "Number of PCs")
+
+```
+
+### 2.2 LDA in the selected PCA space
+
+With Optimal k = 10, I use Xtrain_k that contains the scores of the training obs for the first 10 PCs. Then I project the test data into the same reduced PCA space learned from the training data for the same first 10 PCs. So now they are on the same PCA space.
+
+Since ytrain are the the four tumor types,  by fitting LDA on the same PCA space each patient is described by k numbers instead of 2308 genes which helps to separate the tumor classes.
+
+```{R}
+k_optimal <- which.min(error_rate)
+
+Xtrain_k <- pca_train$x[, 1:k_optimal, drop = FALSE]
+#dim(Xtrain_k) #63 patients with 10 PCs
+
+Xtest_k <- predict(pca_train, newdata = Khan$xtest)[, 1:k_optimal, drop = FALSE]
+#dim(Xtest_k) #20 patients with 10 PCs
+
+lda_k <- lda(x = Xtrain_k, grouping = Khan$ytrain)
+
+test_pred <- predict(lda_k, newdata = Xtest_k)$class
+```
+
+### 2.3 Test set confusion table and misclassification error
+
+The confusion table reveals only little misclassified test observation, resulting in a misclassification error of 20%.
+
+```{r confusion matrix and test error}
+
+tab_test <- table(True = Khan$ytest, Predicted = test_pred)
+tab_test
+
+test_error <- mean(test_pred != Khan$ytest)
+test_error
+```
+
+### 2.4 Fisher discriminant visualization for training and test data
+
+The Fisher discriminant plots show that the tumor groups are well separated in the discriminant space for the training data.
+
+```{r train - fisher discriminant plot}
+lda_train_scores <- predict(lda_k)$x
+
+plot(lda_train_scores[,1], lda_train_scores[,2],
+     col = Khan$ytrain,
+     pch = 19,
+     xlab = "LD1",
+     ylab = "LD2",
+     main = "Fisher discriminant functions with training data")
+legend("topright", legend = levels(as.factor(Khan$ytrain)),
+       col = 1:4, pch = 19)
+```
+We see a similar pattern for the test data that shows that the LDA classifier generalizes well to unseen observations.
+
+```{r test - fisher discriminant plot}
+
+lda_test_scores <- predict(lda_k, newdata = Xtest_k)$x
+
+plot(lda_test_scores[,1], lda_test_scores[,2],
+     col = Khan$ytest,
+     pch = 19,
+     xlab = "LD1",
+     ylab = "LD2",
+     main = "Fisher discriminant functions with test data")
+legend("topright", legend = levels(as.factor(Khan$ytest)),
+       col = 1:4, pch = 19)
+
+```
