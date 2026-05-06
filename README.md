@@ -1,6 +1,6 @@
 # Multivariate Statistics Portfolio in R
 
-*A collection of applied multivariate methods including regression, PCA, robust statistics, factor analysis, discriminant analysis, canonical correlation, and symbolic data analysis.*
+*A collection of applied multivariate methods including regression, PCA, robust statistics, factor analysis, discriminant analysis, canonical correlation and symbolic data analysis.*
 
 ---
 
@@ -22,7 +22,7 @@ The workflow across assignments includes:
 
 02 – Hierarchical and partitioning clustering methods applied to classify wine data
 
-03 – cluster validation: evaluation of clustering results using internal validation criteria such as silhouette and gap statistic
+03 – Cluster validation: evaluation of clustering results using internal validation criteria such as silhouette and gap statistic
 
 04 – Multiple and multivariate linear regression using least-squares estimation
 
@@ -42,7 +42,7 @@ The workflow across assignments includes:
 
 12 – Multiclass discriminant analysis: classification in high dimensional settings using PCA + LDA and cross validation
 
-13 – symbolic loan interval analysis: extension to interval-valued data including aggregation, robust estimation, and clustering
+13 – Symbolic loan interval analysis: extension to interval-valued data including aggregation, robust estimation, and clustering
 
 ---
 
