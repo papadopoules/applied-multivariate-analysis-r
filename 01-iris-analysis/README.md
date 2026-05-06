@@ -1,14 +1,12 @@
 Exploratory multivariate analysis of the iris dataset
 ================
-Georgios Papadopoulos
+Georgios Papadopoulos \|
 2025-10-05
 
-# Introduction
-
-This report presents a compact multivariate analysis of the classic
+*This report presents a compact multivariate analysis of the classic
 `iris` dataset. The goal is to explore relationships between flower
 variables, summarize key statistical properties, and verify fundamental
-results from multivariate theory using empirical data.
+results from multivariate theory using empirical data.*
 
 # Dataset Overview
 
@@ -137,17 +135,20 @@ its mean.
 
 #### Covariances cov(X,Y)
 
-Covariances between same flower part: - Sepal length and width show
-negative covariance of -0.04. It means that longer sepals are very
-slightly associated with negative sepal width (narrow). - Petal length
-and width show positive covariance of 1.29. It means that longer petals
-are positevely associated with wider petals.
+Covariances between same flower part:
 
-Covariances between width of different part: - Sepal length and petal
-length show positive covariance of 1.27. It means that longer sepals
-tend to have longer petals. - Sepal width and petal length show negative
-covariance of -0.12. It means that wider sepals tend very little to
-narrower petals.
+- Sepal length and width show negative covariance of -0.04. It means
+  that longer sepals are very slightly associated with negative sepal
+  width (narrow).
+- Petal length and width show positive covariance of 1.29. It means that
+  longer petals are positevely associated with wider petals.
+
+Covariances between width of different part:
+
+- Sepal length and petal length show positive covariance of 1.27. It
+  means that longer sepals tend to have longer petals.
+- Sepal width and petal length show negative covariance of -0.12. It
+  means that wider sepals tend very little to narrower petals.
 
 ``` r
 cov(iris[, 1:4])
@@ -183,11 +184,14 @@ cor(iris[, 1:4])
 # Correlation Visualization
 
 The correlation matrix can be visualized to highlight the strength and
-direction of relationships: Indeed the positive correlations are colored
-with blue whereas the negative ones are colored towards dark red. The
-smallest points for the correlation between sepal width and its width
-are as mentioned the ones with the closest correlation to zero. - The
-orange points represent the negative correlations described in task 4.
+direction of relationships:
+
+- Indeed the positive correlations are colored with blue whereas the
+  negative ones are colored towards dark red. The smallest points for
+  the correlation between sepal width and its width are as mentioned the
+  ones with the closest correlation to zero.
+- The orange points represent the negative correlations described
+  before.
 
 ``` r
 cor_matrix <- cor(iris[, 1:4])
