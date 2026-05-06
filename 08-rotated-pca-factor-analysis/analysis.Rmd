@@ -53,8 +53,6 @@ k <- 3
 loadings_unrot <- unclass(pca$loadings)[, 1:k]
 
 varimax_res <- varimax(loadings_unrot)
-
-loadings_rot <- varimax_res$loadings
 ```
 
 ## 1.3 Rotation of PCA scores
@@ -66,6 +64,8 @@ Then I multiplied the PCA scores with the rotation matrix.
 ```{r}
 rotation_matrix <- varimax_res$rotmat
 scores_rot <- pca$scores[, 1:k] %*% rotation_matrix
+
+scores_rot
 ```
 
 ## 1.4 Biplot comparison of rotated and unrotated PCA
