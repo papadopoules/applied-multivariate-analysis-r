@@ -276,6 +276,7 @@ $$
 $$
 
 The compression factor is therefore
+
 $$
 \text{compression factor}(k)
 = \frac{1012 \cdot 746}{k(1012 + 746) + 746}

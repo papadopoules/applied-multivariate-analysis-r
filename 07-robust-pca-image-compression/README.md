@@ -381,7 +381,9 @@ $$
 \text{size}_{\text{PCA}} = 3 \bigl( 1012k + 746k + 746 \bigr).
 $$
 
-The compression factor is therefore $$
+The compression factor is therefore
+
+$$
 \text{compression factor}(k)
 = \frac{1012 \cdot 746}{k(1012 + 746) + 746}
 $$
