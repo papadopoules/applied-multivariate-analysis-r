@@ -1,12 +1,12 @@
 Cluster validation for wine profiling
 ================
-Georgios Papadopoulos
+Georgios Papadopoulos \|
 2025-10-17
 
-*Evaluating K-Means, Hierarchical, Fuzzy, and Model-Based Clustering
-with Internal Validity Measures in R*
+*Evaluating k-means, hierarchical, fuzzy, and model based clustering
+with internal validity measures*
 
-# Preparation
+# 1. Calinski-Harabasz and Hartigan indices for k-means
 
 ``` r
 library(doBy)
@@ -14,8 +14,6 @@ data(wine)
 wine_numbers <- wine[, sapply(wine, is.numeric)]
 wine_scaled <- scale(wine_numbers)
 ```
-
-# 1. Calinski-Harabasz and Hartigan indices for K-means
 
 To calculate Calinksi Harabasz index I used `fpc` package
 <https://search.r-project.org/CRAN/refmans/fpc/html/calinhara.html>
@@ -33,7 +31,7 @@ interested in the biggest value which we see both visually and on the
 data for k=3. For the Hartigan index we are interested in the largest
 change of Hartigan, namely $ΔH_k=H_k−H_{k−1}$ which happens for k=3.
 Basically the biggest increase is when we approach when from cluster 2
-we add **cluster 3**. From our previous exercise, we know that we had
+we add **cluster 3**. From our previous report, we know that we had
 three types of wines.
 
 ``` r
@@ -105,13 +103,15 @@ with the average distance to all points in its own cluster c.
 
 $$
 s_i = \frac{d_{i,c} - d_{i,ck}}{max(d_{i,ck},d_{i,c})}
-$$ Then we take the mean of column 3 to obtain the average silhouette
-width which summarizes the overall clustering quality for each cluster.
-I tested this before with `head(sil)`.
+$$
+
+Then we take the mean of column 3 to obtain the average silhouette width
+which summarizes the overall clustering quality for each cluster. I
+tested this before with `head(sil)`.
 
 Although the values are relatively low the highest average is for k = 3
 which means that three clusters provide the best clustering structure.
-The values are low because we remember from the last exercise that there
+The values are low because we remember from the last report that there
 was a significant overlap throughout two of three clusters
 `plot(wine, col = wine$Cult, pch = 16)`
 
@@ -148,7 +148,7 @@ print(results_sil)
 plot(k, silhouette_values, type = "b", pch = 20,
      xlab = "Number of clusters",
      ylab = "Average silhouette width",
-     main = "Average silhouette width for K-means clustering")
+     main = "Average silhouette width for k-means clustering")
 ```
 
 ![](figures/unnamed-chunk-3-1.png)<!-- -->
@@ -159,7 +159,7 @@ Now we will use again the average silhouette width as a validity
 measure, but change the clustering method. Instead of kmeans we use
 hierarchical clustering.
 
-Again the highest average silhouette value is at K = 3, meaning that the
+Again the highest average silhouette value is at k = 3, meaning that the
 clustering quality is then the best. The results are consistent with
 k-means clustering. Between the two algorithms k-means achieved slightly
 higher silhouette values which means slightly better cluster separation.
@@ -267,12 +267,12 @@ opt_k
 
 # 5. Gap statistic for fuzzy clustering
 
-The difference with the previous exercise is that now we implement fuzzy
+The difference with the previous report is that now we implement fuzzy
 cmeans clustering. m is a parameter than controls how fuzzy the
 clustering is. For m=1 clustering is exactly like k-means, but as m
 increases the points can belong to multiple clusters.
 
-For our exercise the Gap statistic increases up to K = 3, after which it
+For our report the Gap statistic increases up to k = 3, after which it
 stabilizes. This confirms the previous findings from k-means and
 hierarchical clustering.
 
