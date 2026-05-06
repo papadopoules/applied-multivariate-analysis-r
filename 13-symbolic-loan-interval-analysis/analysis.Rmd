@@ -1,0 +1,363 @@
+---
+title: "Symbolic data analysis of loan intervals"
+subtitle: "Section 13"
+author: "Georgios Papadopoulos"
+date: "2026-01-17"
+output: github_document
+knit: >
+  (function(inputFile, encoding) {
+    rmarkdown::render(
+      inputFile,
+      encoding = encoding,
+      output_format = "github_document",
+      output_file = "README.md"
+    )
+  })
+---
+
+*Interval based modeling, discriminant analysis and model based clustering of loan risk profiles*
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE, 
+  message = FALSE,
+  warning = FALSE,
+  out.width  = "80%",
+  fig.align = "center",
+  fig.path = "figures/"
+)
+```
+
+## 1. Construction of the interval loan dataset
+
+```{r packages}
+
+library(MAINT.Data)
+library(dplyr)
+#?MAINT.Data
+
+loan <- read.csv("loan_data.csv")
+str(loan)
+```
+
+### 1.1 Log transformation of financial variables
+
+```{r log transform}
+loan <- loan %>% mutate(
+  ln_annual_inc = log(annual_inc),
+  ln_revol_bal  = log(revol_bal)
+  )
+```
+
+### 1.2 Interval aggregation by subgrade
+
+The analysis focuses on the requested loan variables, with each row representing one loan application. Symbolic units of subgrades were defined which will become the one interval observation. In other words, all loans from the same subgrade are grouped together.
+
+With classical aggregation each subgrade A1-G5 becomes an interval with [min, max] value.
+
+```{r Agregate Micro Data}
+loan_micro <- loan[, c(
+  "ln_annual_inc",
+  "int_rate",
+  "open_acc",
+  "total_acc"
+)]
+
+sub_grade_units <- factor(loan$sub_grade)
+
+loan_interval_classic <- AgrMcDt(loan_micro, sub_grade_units)
+
+loan_interval_classic
+```
+
+Now with robust aggregation using quantile, I set the interval bounds the 5th and 96th percentile. This is done to trim the most extreme 5% of obs from each side.
+
+```{r robust aggregation}
+loan_interval_robust <- AgrMcDt(loan_micro, sub_grade_units, agrcrt = c(0.05, 0.95))
+
+head(loan_interval_robust)
+```
+
+### 1.3 Risk group definition
+
+```{r define risk level groups}
+
+subgrades <- rownames(loan_interval_classic)
+
+risk_level <- factor(
+  ifelse(substr(subgrades, 1, 1) %in% c("A", "B"), "Low",
+  ifelse(substr(subgrades, 1, 1) %in% c("C", "D"), "Medium",
+         "High")),
+  levels = c("Low", "Medium", "High")
+)
+
+risk_level
+```
+
+## 2. Biplot visualization of interval variables
+
+Higher log-annual income is associated with lower interest rates. It shows that borrowers with higher incomes tend to receive more favorable lending conditions. An increase in the number of open accounts corresponds to a higher total number of accounts.
+
+When it comes to the following visualizations, the IData object stores interval observations through the midpoint (MidP) and log-range (LogR). To visualize each symbolic observation as an interval cross, the interval length is obtained from exp(LogR) and centered around the midpoint.
+
+### 2.1 Midpoint visualization
+
+```{r Biplots classic}
+
+par(mfrow = c(1, 2))
+
+plot(
+  loan_interval_classic@MidP$ln_annual_inc.MidP,
+  loan_interval_classic@MidP$int_rate.MidP,
+  xlab = "ln(annual income)",
+  ylab = "interest rate",
+  main = "ln(annual income) vs interest rate"
+)
+
+plot(
+  loan_interval_classic@MidP$open_acc.MidP,
+  loan_interval_classic@MidP$total_acc.MidP,
+  xlab = "open accounts",
+  ylab = "total accounts",
+  main = "open accounts vs total accounts"
+)
+```
+### 2.2 Interval visualization
+
+```{r intervals}
+add_intervals <- function(idata, xvar, yvar, xlab, ylab, main) {
+  x_mid <- idata@MidP[[paste0(xvar, ".MidP")]]
+  y_mid <- idata@MidP[[paste0(yvar, ".MidP")]]
+
+  x_range <- exp(idata@LogR[[paste0(xvar, ".LogR")]])
+  y_range <- exp(idata@LogR[[paste0(yvar, ".LogR")]])
+
+  plot(x_mid, y_mid, type = "n",
+       xlab = xlab, ylab = ylab, main = main)
+
+  segments(x_mid - x_range / 2, y_mid,
+           x_mid + x_range / 2, y_mid)
+
+  segments(x_mid, y_mid - y_range / 2,
+           x_mid, y_mid + y_range / 2)
+}
+
+
+add_intervals(
+  loan_interval_classic,
+  "ln_annual_inc", "int_rate",
+  "ln(annual income)", "interest rate",
+  "ln(annual income) vs interest rate"
+)
+
+add_intervals(
+  loan_interval_classic,
+  "open_acc", "total_acc",
+  "open accounts", "total accounts",
+  "open accounts vs total accounts"
+)
+
+```
+
+### Robustness
+
+The robust interval biplots confirm the same overall relationships as the classical version, but the interval ranges are less affected by extreme observations. This makes the central pattern clearer: higher log-income is generally associated with lower interest rates, while open accounts and total accounts remain positively related.
+
+#### 2.3 Midpoint robust visualization
+
+```{r plot robust biplots}
+par(mfrow = c(1, 2))
+
+plot(
+  loan_interval_robust@MidP$ln_annual_inc.MidP,
+  loan_interval_robust@MidP$int_rate.MidP,
+  xlab = "ln(Annual Income)",
+  ylab = "Interest Rate",
+  main = "ln(Annual Income) vs Interest Rate"
+)
+
+plot(
+  loan_interval_robust@MidP$open_acc.MidP,
+  loan_interval_robust@MidP$total_acc.MidP,
+  xlab = "Open Accounts",
+  ylab = "Total Accounts",
+  main = "Open Accounts vs Total Accounts"
+)
+
+
+```
+#### 2.4 Interval robust visualization
+
+
+```{r plot robust biplots interval}
+par(mfrow = c(1, 2))
+
+add_intervals(
+  loan_interval_robust,
+  "ln_annual_inc", "int_rate",
+  "ln(annual income)", "interest rate",
+  "robust: ln(annual income) vs interest rate"
+)
+
+add_intervals(
+  loan_interval_robust,
+  "open_acc", "total_acc",
+  "open accounts", "total accounts",
+  "robust: open accounts vs total accounts"
+)
+
+```
+
+## 3. Model estimation for interval data
+### 3.1 Maximum likelihood estimation
+
+Maximum likelihood estimation provides estimates of the mean and covariance for the interval-valued variables. The mean describes the typical levels and variability of income, interest rate, and account characteristics across loan sub-grades. The covariance matrix shows how these variables are related to each other.
+
+```{r}
+#?mle
+
+fit_mle <- mle(loan_interval_classic)
+#fit_mle
+fit_mle@mleNmuE
+```
+
+### 3.2 Variance-covariance model with C3 configuration
+
+```{r}
+fit_mle_C3 <- mle(loan_interval_classic, CovCase = 3)
+fit_mle_C3
+```
+
+### 3.3 Robust estimation with fastTLE
+
+**Trimmed Likelihood Estimators (TLE):**
+Compared to classical MLE, the robust estimation provides more stable parameter estimates by reducing the influence of outliers and thus being a bit larger compared with 3a.
+
+```{r}
+#?fasttle
+
+fit_tle <- fasttle(loan_interval_classic, dist = "chisq")
+fit_tle
+
+#fit_tle@RobNmuE #robust mean estimates
+```
+
+### 3.4 Outlier detection in interval data
+
+The identified outliers are from subgrades G1–G5, which belong to the highest loan risk level.
+
+```{r}
+outliers <- getIdtOutl(loan_interval_classic, fit_tle)
+outliers
+```
+
+```{r}
+plot(outliers)
+```
+
+## 4. Discriminant analysis of loan risk groups
+### 4.1 Crossvalidated classification error
+
+The risk_level factor (low medium high) from section 1 will be used now.
+
+```{r}
+cv_lda <- DACrossVal(loan_interval_classic, risk_level, TrainAlg = lda)
+
+```
+
+```{r}
+cv_qda <- DACrossVal(loan_interval_classic, risk_level, TrainAlg = qda)
+```
+
+Here  kfold and CVrep were adjusted because it is computationally slow.
+
+```{r}
+#cv_snda <- DACrossVal(loan_interval_classic, risk_level, TrainAlg = snda, kfold = 3, CVrep = 1, loo = FALSE)
+```
+
+Error rate estimates of algorithm snda 
+      Low    Medium      High    Global 
+0.1944444 0.8055556 0.2666667 0.4000000 
+
+Confusion matrix (original classes in rows, predicted in columns)
+
+       Low Medium  High
+Low    0.8  0.100 0.100
+Medium 0.2  0.200 0.600
+High   0.0  0.083 0.917
+
+Among the three discriminant methods, LDA achieves the lowest global cross validated error rate of 0.17 showing the best classification performance. SNDA performs moderately with 0.4, improving over QDA but remaining clearly inferior to LDA. QDA shows the poorest performance with 0.5, suggesting that its greater flexibility leads to overfitting and unstable class boundaries in this dataset.
+
+
+```{r}
+#cv_errors <- c(
+#  LDA  = attr(cv_lda,  "errestimates")["Global"],
+#  QDA  = attr(cv_qda,  "errestimates")["Global"],
+#  SNDA = attr(cv_snda, "errestimates")["Global"]
+#)
+
+#cv_errors
+```
+ LDA.Global  QDA.Global SNDA.Global 
+  0.1742857   0.5385735   0.4000000 
+
+### 4.2 Linear discriminant classification rule
+
+```{r}
+lda_fit <- lda(loan_interval_classic, risk_level)
+lda_fit
+```
+
+### 4.3 Group prediction and interpretation
+
+```{r}
+lda_pred <- predict(lda_fit, loan_interval_classic)
+
+table(True = risk_level,Predicted = lda_pred$class)
+
+mean(lda_pred$class != risk_level)
+```
+
+## 5. Model based clustering of loan purposes
+### 5.1 Interval aggregation by loan purpose
+
+```{r prepare micro data}
+loan_micro_purpose <- loan[, c("ln_annual_inc", "ln_revol_bal", "open_acc", "total_acc")]
+head(loan_micro_purpose)
+```
+
+
+The aggregation by loan purpose reveals differences in income, balance, and account variability across purposes, with debt_consolidation showing the largest dispersio.
+
+```{r}
+purpose_units <- factor(loan$purpose)
+
+loan_purpose_interval_data <- AgrMcDt(loan_micro_purpose, purpose_units)
+loan_purpose_interval_data
+
+```
+
+### 5.2 Model based clustering from one to five clusters
+
+Model based clustering is applied for one to five clusters.
+
+```{r}
+clust_fit <- Idtmclust(loan_purpose_interval_data, G = 1:5) 
+summary(clust_fit)
+```
+
+By extracting the classification we can see the patterns across loan purposes.
+
+```{r}
+clust_fit@classification
+```
+
+### 5.3 Parallel coordinates visualization
+
+The parallel coordinate plot shows clear differences between clusters in both midpoint and log range components. The MidP variables highlight differences in the four variables about the central level of the interval. In contrast, the LogR axes capture differences in internal variability/spread.
+
+So although in midpoints the results are mix, it is clear that CP1 has the highest spread, followed by CP2. CP3 and CP4 have the lowest internal spread.
+
+```{r}
+pcoordplot(clust_fit)
+```
