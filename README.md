@@ -1,4 +1,4 @@
-# Multivariate Statistics Portfolio in R
+# Applied Multivariate Statistics in R
 
 *A collection of applied multivariate methods including regression, PCA, robust statistics, factor analysis, discriminant analysis, canonical correlation and symbolic data analysis.*
 
