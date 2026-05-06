@@ -21,7 +21,7 @@ for 61% of total variance in the data. So a large part of the
 multivariate dataset can be represented in a two-dimensional PCA plot,
 making PC1 and PC2 suitable for visualizing.
 
-# 1.1 Classical PCA and group separation
+## 1.1 Classical PCA and group separation
 
 I first produced the standard `biplot(pca)`. From the enlarged biplot it
 becomes clear which variables dominate PC1 and PC2:
@@ -72,7 +72,7 @@ biplot(pca, cex = 0.7)
 <img src="figures/unnamed-chunk-1-1.png" style="display: block; margin: auto;" />
 
 To doublecheck the loadings I visualized them in barplots like at the
-last exercise session.
+last report.
 
 ``` r
 loadings <- pca$rotation[,1:2]
@@ -106,7 +106,7 @@ ggbiplot(pca, groups = darwinM$class, ellipse = TRUE) +
 
 <img src="figures/unnamed-chunk-3-1.png" style="display: block; margin: auto;" />
 
-# 1.2 Robust PCA diagnostics by group
+## 1.2 Robust PCA diagnostics by group
 
 I splitted the dataset by using the labels H and P. Then I removed the
 19th variable which was the `class` variable. Afterwards applied robust
@@ -171,7 +171,7 @@ inside named red, blue, green. We see that the structure of each color
 matrix has p = 746 variables such as v1, v2, …, v746 and n = 1023
 observations.
 
-# 2.1 Reading and visualizing the image
+## 2.1 Reading and visualizing the image
 
 ``` r
 library(pixmap)
@@ -201,7 +201,7 @@ G <- x@green
 B <- x@blue
 ```
 
-# 2.2 PCA reconstruction of RGB channels
+## 2.2 PCA reconstruction of RGB channels
 
 I selected prcomp() because it performs PCA with SVD which is stable for
 large matrices. Scaling the data is not necessary because scaling would
@@ -258,10 +258,8 @@ abline(h = 0.9, col = "red", lty = 2)
 
 <img src="figures/unnamed-chunk-7-1.png" style="display: block; margin: auto;" />
 
-To reconstruct X with the first k PCs, I used following formulas from
-the lecture
-
-(5.22) $Z=(X-1\bar{x}^\top)\,\hat{\Gamma}̂$
+To reconstruct X with the first k PCs, I used following formulas (5.22)
+$Z=(X-1\bar{x}^\top)\,\hat{\Gamma}$
 
 This is exactly what prcomp() computes:
 
@@ -276,18 +274,18 @@ The second one is (5.35) X = Z $V^\top$ where:
 - `pca$rotation` = $\hat{\Gamma}̂ = V$ = our loadings
 
 Therefore I multiplied 5.22 with the inverse $\hat{\Gamma}̂^\top$ and it
-becomes: $$
-Z \hat{\Gamma}̂^\top =X-1\bar{x}^\top
-$$
+becomes: $Z \hat{\Gamma}̂^\top =X-1\bar{x}^\top$
 
 Since I centered the dataset for PCA, the mean is already included, so
 now just fixing the way the equation shows:
 
 $$
 X = Z \hat{\Gamma}̂^\top +1\bar{x}^\top
-$$ This is done by `xhat`. In the reconstruct function I had to add a
-limit on each observation for pixel creation as some estimations were
-out of \[0,1\].
+$$
+
+This is done by `xhat`. In the reconstruct function I had to add a limit
+on each observation for pixel creation as some estimations were out of
+\[0,1\].
 
 ``` r
 k <- 10
@@ -321,7 +319,7 @@ plot(x_rec)
 
 <img src="figures/unnamed-chunk-9-1.png" style="display: block; margin: auto;" />
 
-# 2.3 Selecting the number of components
+## 2.3 Selecting the number of components
 
 Although PC1-PC10 capture 90% of total variance of the xray picture, it
 is not enough variance (in our case pixel variance) to visualize the
@@ -365,11 +363,13 @@ plot(x_rec)
 
 <img src="figures/unnamed-chunk-10-1.png" style="display: block; margin: auto;" />
 
-# 2.4 Compression factor
+## 2.4 Compression factor
 
 To quantify the storage savings, we compare the size of the original RGB
 image with its PCA representation. The original image consists of three
-$1012 \cdot 746$ matrices: $$
+$1012 \cdot 746$ matrices:
+
+$$
 \text{original size} = 3 \cdot 1012 \cdot 746
 $$
 

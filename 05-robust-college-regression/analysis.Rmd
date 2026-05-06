@@ -1,12 +1,12 @@
 ---
 title: "Robust regression for college acceptance prediction"
 subtitle: "Section 5"
-author: "Georgios Papadopoulos"
+author: "Georgios Papadopoulos | "
 date: "2025-11-01"
 output: github_document
 ---
 
-*Comparing least-squares and robust regression models for predicting college acceptance rates in R*
+*Comparing least squares and robust regression models for predicting college acceptance rates in R*
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
@@ -43,20 +43,20 @@ names(college_data)[names(college_data) == "Expend"]      <- "Expend_log"
 
 par(mfrow = c(6, 2), mar = c(1.5, 2, 2, 1), oma = c(0, 0, 0, 0))
 
-hist(College$Accept, main = "Accept (original)", col = "red")
-hist(college_data$Accept_log, main = "Accept (log)", col = "green3")
+hist(College$Accept, main = "Accept (original)", col = "red3")
+hist(college_data$Accept_log, main = "Accept (log)", col = "green4")
 
-hist(College$Apps, main = "Apps (original)", col = "red")
-hist(college_data$Apps_log, main = "Apps (log)", col = "green3")
+hist(College$Apps, main = "Apps (original)", col = "red3")
+hist(college_data$Apps_log, main = "Apps (log)", col = "green4")
 
-hist(College$F.Undergrad, main = "F.Undergrad (original)", col = "red")
-hist(college_data$F.Undergrad_log, main = "F.Undergrad (log)", col = "green3")
+hist(College$F.Undergrad, main = "F.Undergrad (original)", col = "red3")
+hist(college_data$F.Undergrad_log, main = "F.Undergrad (log)", col = "green4")
 
-hist(College$P.Undergrad, main = "P.Undergrad (original)", col = "red")
-hist(college_data$P.Undergrad_log, main = "P.Undergrad (log)", col = "green3")
+hist(College$P.Undergrad, main = "P.Undergrad (original)", col = "red3")
+hist(college_data$P.Undergrad_log, main = "P.Undergrad (log)", col = "green4")
 
-hist(College$Expend, main = "Expend (original)", col = "red")
-hist(college_data$Expend_log, main = "Expend (log)", col = "green3")
+hist(College$Expend, main = "Expend (original)", col = "red3")
+hist(college_data$Expend_log, main = "Expend (log)", col = "green4")
 ```
 
 ```{r}
@@ -78,7 +78,8 @@ The OLS regression model was fitted on the training data using all available pre
 
 The residuals are approximately symmetric around zero, therefore we assume no major violations of model assumptions and no bias.
 
-*Regarding each plot:*
+**Regarding each plot:**
+
 -   The residuals vs fitted plot shows residuals primarily between 0 and ±0.5. The distribution is slightly asymmetric, with more colleges showing small positive residuals and fewer with larger negative residuals. The lower part of the plot is sparser and Harvard University stands out with a residual below –1 which I think means that it accepted fewer students than the model captures.
 -   The QQ plot shows that most residuals lie close to the diagonal line which means close to normality. On the upper right tail, there are few to no deviations, whereas on the lower left side several points deviate from the line. These outliers I think represent universities that accepted far fewer students than the regression captures. The most pronounced outlier is Harvard University which means that this University's acceptance behavior differs a lot from the regression model.
 -   The scale location plot shows a good spread of points that are are evenly scattered without a clear increasing or decreasing pattern. Therefore homoscedasticity holds.
@@ -111,7 +112,7 @@ library(robustbase)
 model_mm <- lmrob(Accept_log ~ ., data = train)
 summary(model_mm)
 
-par(mfrow = c(2, 3), mar = c(1.5, 2, 2, 1), oma = c(0, 0, 0, 0))
+par(mfrow = c(2, 2), mar = c(1.5, 2, 2, 1), oma = c(0, 0, 0, 0))
 plot(model_mm)
 ```
 
@@ -155,7 +156,7 @@ This issue arises because ltsReg() relies on the Minimum Covariance Determinant 
 numeric_vars <- train[, sapply(train, is.numeric)]
 cor_matrix <- cor(numeric_vars, use = "pairwise.complete.obs")
 library(corrplot)
-corrplot(cor_matrix, method = "color", tl.col = "black", tl.srt = 45)
+corrplot(cor_matrix, method = "color", col = colorRampPalette(c("red3", "white", "green4"))(200), tl.col = "black", tl.srt = 45)
 ```
 
 To make ltsReg() work, the model must be simplified to avoid multicollinearity and reduce dimensionality. I only used the most dominant predictor `Apps_log` that allows LTS regression to run. Simplifying the model ensures that the covariance matrix can be inverted.
@@ -203,7 +204,7 @@ cv_errors <- data.frame(
 )
 
 boxplot(cv_errors,
-        col   = c("lightyellow", "khaki1", "lightyellow", "khaki1"),
+        col   = c("lightyellow", "khaki", "lightyellow", "khaki"),
         names = c("Full LS", "Full MM", "Expert LS", "Expert MM"),
         ylab  = "Prediction error",
         main  = "10 fold cross validation")
@@ -245,9 +246,13 @@ boxplot(cv_errors_rtmspe,
 
 # 8. Test set prediction and graphical evaluation
 
-The plots for all models show a linear relationship between observed and predicted values, so we see that the models capture the main trend well. Both MM regression models show tighter clustering of points around the diagonal and fewer extreme deviations which confirms their robustness to outliers. In contrast, the LS models show slightly greater dispersion due to outliers.
+The plots compare the observed values of Accept_log with the predicted values from each model. The red diagonal line represents perfect prediction, where observed and predicted values are equal. Points close to this line indicate accurate predictions, while larger deviations indicate prediction errors.
 
-The MM regression models yield more stable and reliable predictions. The expert MM model even with fewer predictors performs almost as well as the full MM model and better than both LS versions. This confirms that the few predictors are enough for accurate and robust prediction.
+Overall, all models show a clear positive relationship between observed and predicted values, meaning that they capture the main structure in the data reasonably well. The LS models show somewhat larger deviations for some observations, which may be caused by the influence of outliers or high-leverage points.
+
+The MM regression models appear more robust, with predictions that are less affected by extreme observations. The expert MM model performs similarly to the full MM model, despite using fewer predictors. This suggests that the expert selected variables contain most of the relevant predictive information and that the simpler robust model may be preferable.
+
+Thus the expert MM model seems to provide a good compromise between prediction accuracy, robustness, and model simplicity.
 
 ```{r}
 pred_ls        <- predict(model_ls, newdata = test)
@@ -265,19 +270,19 @@ pred_df <- data.frame(
 
 par(mfrow = c(2, 2))
 plot(pred_df$Observed, pred_df$LS_Full, 
-     main = "Full LS Model", xlab = "Observed", ylab = "Predicted", pch = 19, col = "green3")
-abline(0, 1, lwd = 1.5, col = "red")
+     main = "Full LS Model", xlab = "Observed", ylab = "Predicted", pch = 19, col = "lightgreen")
+abline(0, 1, lwd = 2, col = "red")
 
 plot(pred_df$Observed, pred_df$MM_Full, 
-     main = "Full MM Model", xlab = "Observed", ylab = "Predicted", pch = 19, col = "green3")
-abline(0, 1, lwd = 1.5, col = "red")
+     main = "Full MM Model", xlab = "Observed", ylab = "Predicted", pch = 19, col = "lightgreen")
+abline(0, 1, lwd = 2, col = "red")
 
 plot(pred_df$Observed, pred_df$LS_Expert, 
-     main = "Expert LS Model", xlab = "Observed", ylab = "Predicted", pch = 19, col = "green3")
-abline(0, 1, lwd = 1.5, col = "red")
+     main = "Expert LS Model", xlab = "Observed", ylab = "Predicted", pch = 19, col = "lightgreen")
+abline(0, 1, lwd = 2, col = "red")
 
 plot(pred_df$Observed, pred_df$MM_Expert, 
-     main = "Expert MM Model", xlab = "Observed", ylab = "Predicted", pch = 19, col = "green3")
-abline(0, 1, lwd = 1.5, col = "red")
+     main = "Expert MM Model", xlab = "Observed", ylab = "Predicted", pch = 19, col = "lightgreen")
+abline(0, 1, lwd = 2, col = "red")
 
 ```

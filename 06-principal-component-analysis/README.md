@@ -1,6 +1,6 @@
 Principal component analysis for wine and spectral data
 ================
-Georgios Papadopoulos
+Georgios Papadopoulos \|
 2025-11-08
 
 *Dimensionality reduction and score interpretation using standardized
@@ -266,8 +266,11 @@ With following snippet I show that it is indeed a singular eigenvector.
 # 2.4 PCA with prcomp and loading interpretation
 
 prcomp() works because it does not require inverting the covariance
-matrix. Instead, it directly decomposes the yarn data matrix X into: $$
-X = U D V^{\top} $$
+matrix. Instead, it directly decomposes the yarn data matrix X into:
+
+$$
+X = U D V^{\top} 
+$$
 
 - U is the left singular vectors (n×n). It describes how each
   observation relates to the principal components `scores`.
