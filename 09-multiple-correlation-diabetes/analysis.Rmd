@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
   )
 ```
 
-# 1. Multiple correlation by diagnostic group
+## 1. Multiple correlation by diagnostic group
 
 The Diabetes dataset consists of p=6 variables and n=145 obs, out of which the ones related with glucose plasma are assigned onto `gluc.vars`. There are three levels of groups, namely Normal, Chemical_Diabetic and Overt_Diabetic.
 
@@ -70,11 +70,17 @@ Across the diagnostic groups, the multiple correlation increases from 0.55 in th
 ex1_results
 ```
 
-# 2. Interpretation of linear predictor coefficients
+## 2. Interpretation of linear predictor coefficients
 
 The coefficients of the linear predictor $a_{0}+a^{\top}y$ can be interpreted in the same way as regression coefficients. Each coefficient describes how the predicted relative weight `relwt` changes when one glucose plasma variable increases, while the other variables are kept fixed. A positive coefficient means that higher values of this variable are associated with higher predicted relative weight `relwt` and a negative coefficient means the opposite. The larger the absolute value of a coefficient, the more important that variable is in the linear prediction of `relwt`. we can see which glucose variables are most influential in each group and how their influence changes with group severity by comparing these coefficients between groups. 
 
-Because I was not sure from the exercise instruction whether I needed to compute the coefficients, I did it depending on each of the three groups as we saw for sample data in the lecture with $a=R^{-1}_{yy}\,R_{yx}$ where we see for example that for every group the `sspg` variable has the most influence on each group with a positive coeff.
+As an additional comparison, I computed the coefficients separately for the three groups using
+
+$$
+a=R^{-1}_{yy}\,R_{yx}
+$$
+
+where I conclude for example that for every group the `sspg` variable has the most influence on each group with a positive coeff.
 
 ```{r}
 compute_coeffs <- function(g) {
@@ -99,7 +105,7 @@ coeffs_ex2
 ```
 
 
-# 3. Significance of multiple correlations
+## 3. Significance of multiple correlations
 
 To test whether the multiple correlation is zero, we use the F-test
 
@@ -110,7 +116,7 @@ $$
 
 with p=4 predictors and n=145 obs.
 
-Codewise, I do the same function as in task 1 but now I also calculate Fstat and the right tailed probability.
+Codewise, I do the same function as in section 1 but now I also calculate Fstat and the right tailed probability.
 
 ```{r}
 compute_test <- function(g) {
@@ -149,7 +155,7 @@ Although a relatively large $r^2$ already suggests that the multiple correlation
 ex3_results
 ```
 
-# 4. Pearson CCA grid comparison
+## 4. Pearson CCA grid comparison
 
 Same results with CCAgrid. This happens because we only have one variable in X = `relwt`. In that case, the canonical correlation is the same thing as the multiple correlation. So CCAgrid gives the same numbers as before.
 
@@ -186,7 +192,7 @@ ex4_results <- c(normal = res1$cor, chemical = res2$cor, overt = res3$cor)
 ex4_results
 ```
 
-# 5. Spearman CCA grid comparison
+## 5. Spearman CCA grid comparison
 
 method = "spearman" produces slightly higher correlations than Pearson, but the overall pattern remains the same. The methodological difference is that Spearman correlation is rank based and captures also non linear relationships, while Pearson correlation measures linear relationships using the raw data. Spearman is therefore less sensitive to outliers, which I believe explains the small increase in the correlation values.
 
@@ -221,7 +227,7 @@ ex5_results
 
 ```
 
-# 6. Effect of transformations on rank-based results
+## 6. Effect of transformations on rank-based results
 
 Spearman correlation is based on ranks, not on the original numerical values. Therefore, monotone transformations such as the logarithm should not change the rank order of the observations and should not change the Spearman correlations.
 
@@ -260,11 +266,11 @@ res3$cor
 
 ```
 
-# 7. Permutation test for uncorrelatedness
+## 7. Permutation test for uncorrelatedness
 
 permTest does a permutation test for uncorrelatedness by repeatedly shuffling the rows of the first input X. Each shuffle breaks any real relationship between X and Y. After each permutation, the function creates a new canonical correlation. These correlations represent what the correlation would look like if X and Y were unrelated. Then we compare the real correlation to these fake ones basically. If the real correlation is bigger than all of the permuted ones, it means the relationship is real and not just random. If X and Y were truly unrelated, shuffling X would not change anything. A permutation test does not rely on a distributional assumption.
 
-# 8. Pearson permutation test results
+## 8. Pearson permutation test results
 
 The permutation test shows that all three canonical correlations are statistically significant.
 
@@ -274,7 +280,7 @@ The permutation test shows that all three canonical correlations are statistical
 
 - For the Overt Diabetic group, the p-value is again effectively 0, showing a very strong relationship.
 
-These results match the earlier F tests from Exercise 3: in every group, the glucose plasma variables are significantly related to `relwt`.
+These results match the earlier F tests from section 3: in every group, the glucose plasma variables are significantly related to `relwt`.
 
 ```{r}
 #?permTest
@@ -307,7 +313,7 @@ perm_overt <- permTest(X3, Y3, R = 1000, method="pearson")
 perm_overt
 ```
 
-# 9. Spearman permutation test results
+## 9. Spearman permutation test results
 
 The Spearman permutation results are very similar to the Pearson permutation results. This is because permTest() performs canonical correlation analysis CCA, not simple correlation. CCA finds the strongest possible linear association between the variable sets, and this optimization step makes the result insensitive to whether Pearson or Spearman correlations were used. Therefore in this case both methods give identical permutation results, although methodologically are different.
 

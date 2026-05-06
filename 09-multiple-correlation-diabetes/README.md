@@ -6,7 +6,7 @@ Georgios Papadopoulos \|
 *Assessing relationships between relative weight and glucose-insulin
 features across diagnostic groups*
 
-# 1. Multiple correlation by diagnostic group
+## 1. Multiple correlation by diagnostic group
 
 The Diabetes dataset consists of p=6 variables and n=145 obs, out of
 which the ones related with glucose plasma are assigned onto
@@ -97,7 +97,7 @@ ex1_results
     ## 2 Chemical_Diabetic 0.3132089 0.5596507
     ## 3    Overt_Diabetic 0.5150899 0.7176976
 
-# 2. Interpretation of linear predictor coefficients
+## 2. Interpretation of linear predictor coefficients
 
 The coefficients of the linear predictor $a_{0}+a^{\top}y$ can be
 interpreted in the same way as regression coefficients. Each coefficient
@@ -111,11 +111,15 @@ prediction of `relwt`. we can see which glucose variables are most
 influential in each group and how their influence changes with group
 severity by comparing these coefficients between groups.
 
-Because I was not sure from the exercise instruction whether I needed to
-compute the coefficients, I did it depending on each of the three groups
-as we saw for sample data in the lecture with $a=R^{-1}_{yy}\,R_{yx}$
-where we see for example that for every group the `sspg` variable has
-the most influence on each group with a positive coeff.
+As an additional comparison, I computed the coefficients separately for
+the three groups using
+
+$$
+a=R^{-1}_{yy}\,R_{yx}
+$$
+
+where I conclude for example that for every group the `sspg` variable
+has the most influence on each group with a positive coeff.
 
 ``` r
 compute_coeffs <- function(g) {
@@ -152,7 +156,7 @@ coeffs_ex2
     ## 11    Overt_Diabetic  instest -0.16568910
     ## 12    Overt_Diabetic     sspg  0.72778339
 
-# 3. Significance of multiple correlations
+## 3. Significance of multiple correlations
 
 To test whether the multiple correlation is zero, we use the F-test
 
@@ -162,8 +166,8 @@ $$
 
 with p=4 predictors and n=145 obs.
 
-Codewise, I do the same function as in task 1 but now I also calculate
-Fstat and the right tailed probability.
+Codewise, I do the same function as in section 1 but now I also
+calculate Fstat and the right tailed probability.
 
 ``` r
 compute_test <- function(g) {
@@ -214,7 +218,7 @@ ex3_results
     ## 2 Chemical_Diabetic 0.5596507 0.3132089 3.534364 1.730969e-02
     ## 3    Overt_Diabetic 0.7176976 0.5150899 7.435665 3.263375e-04
 
-# 4. Pearson CCA grid comparison
+## 4. Pearson CCA grid comparison
 
 Same results with CCAgrid. This happens because we only have one
 variable in X = `relwt`. In that case, the canonical correlation is the
@@ -256,7 +260,7 @@ ex4_results
     ##    normal  chemical     overt 
     ## 0.5499257 0.5596506 0.7167311
 
-# 5. Spearman CCA grid comparison
+## 5. Spearman CCA grid comparison
 
 method = “spearman” produces slightly higher correlations than Pearson,
 but the overall pattern remains the same. The methodological difference
@@ -297,7 +301,7 @@ ex5_results
     ##    normal  chemical     overt 
     ## 0.5636177 0.5998729 0.7737556
 
-# 6. Effect of transformations on rank-based results
+## 6. Effect of transformations on rank-based results
 
 Spearman correlation is based on ranks, not on the original numerical
 values. Therefore, monotone transformations such as the logarithm should
@@ -354,7 +358,7 @@ res3$cor
 
     ## [1] 0.6385748
 
-# 7. Permutation test for uncorrelatedness
+## 7. Permutation test for uncorrelatedness
 
 permTest does a permutation test for uncorrelatedness by repeatedly
 shuffling the rows of the first input X. Each shuffle breaks any real
@@ -367,7 +371,7 @@ relationship is real and not just random. If X and Y were truly
 unrelated, shuffling X would not change anything. A permutation test
 does not rely on a distributional assumption.
 
-# 8. Pearson permutation test results
+## 8. Pearson permutation test results
 
 The permutation test shows that all three canonical correlations are
 statistically significant.
@@ -381,7 +385,7 @@ statistically significant.
 - For the Overt Diabetic group, the p-value is again effectively 0,
   showing a very strong relationship.
 
-These results match the earlier F tests from Exercise 3: in every group,
+These results match the earlier F tests from section 3: in every group,
 the glucose plasma variables are significantly related to `relwt`.
 
 ``` r
@@ -440,7 +444,7 @@ perm_overt
     ## R = 1000 random permuations
     ## Alternative hypothesis: true maximum correlation is not equal to 0
 
-# 9. Spearman permutation test results
+## 9. Spearman permutation test results
 
 The Spearman permutation results are very similar to the Pearson
 permutation results. This is because permTest() performs canonical
