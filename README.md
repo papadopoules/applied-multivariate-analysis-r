@@ -1,6 +1,6 @@
 # Applied Multivariate Statistics in R
 
-*A collection of applied multivariate methods including regression, PCA, robust statistics, factor analysis, discriminant analysis, canonical correlation and symbolic data analysis.*
+*A portfolio of applied multivariate statistical analyses in R, covering regression, PCA, robust statistics, factor analysis, discriminant analysis, canonical correlation analysis, clustering and symbolic data analysis.*
 
 ---
 
