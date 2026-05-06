@@ -152,6 +152,7 @@ pca_rotated <- list(
   scale = pca$scale,
   sdev = pca$sdev[1:k]
 )
+
 class(pca_rotated) <- "prcomp"     # trick fviz_pca_biplot into accepting it
 
 fviz_pca_biplot(
@@ -165,7 +166,7 @@ fviz_pca_biplot(
 
 # 2. Factor analysis of handwriting features
 
-I selected k=3 because in task 1 I found out that 3 PCs explain 70%
+I selected k=3 because before I found out that 3 PCs explain 70%
 cumulative variance of the data which is sufficient.
 
 ## 2.1 Factor model estimation
@@ -239,7 +240,7 @@ The largest number of factors I could technically use is the number of
 variables minus one. Since we have 18 variables because I removed
 `class`, the maximum possible number of factors is k = 17.
 
-However large k dont make sense in practice. Factor analysis is only
+However large k don’t make sense in practice. Factor analysis is only
 useful with a small number of factors, usually around k=5.
 
 ## 2.3 PCA and factor analysis comparison
@@ -258,7 +259,7 @@ statistical model and the method used to compute them.
 
 Uniquenesses are special to factor analysis. They show how much of a
 variable’s variance the factors cannot explain. I already described them
-in task 2a but basically:
+in section 2.1 but basically:
 
 - A low uniqueness means the factors explain the variable well closer to
   0.
