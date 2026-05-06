@@ -1,4 +1,4 @@
-UE Multivariate Statistics
+Multiple correlation analysis of diabetes biomarkers
 ================
 Georgios Papadopoulos \|
 2025-12-01
@@ -59,7 +59,9 @@ correlation matrix for each group from page 100/126.
 
 $$
 r^{2}_{x,y} = R^{\top}_{yx} \, R^{-1}_{yy} \, R_{yx}
-$$ Where x = relwt and y = (glufast, glutest, instest, sspg)
+$$
+
+Where x = relwt and y = (glufast, glutest, instest, sspg)
 
 ``` r
 compute_multcorr <- function(g) {

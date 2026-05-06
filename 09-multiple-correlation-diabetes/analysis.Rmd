@@ -1,5 +1,5 @@
 ---
-title: "UE Multivariate Statistics"
+title: "Multiple correlation analysis of diabetes biomarkers"
 subtitle: "Section 9"
 author: "Georgios Papadopoulos | "
 date: "2025-12-01"
@@ -40,6 +40,7 @@ To calculate r for each group I wrote a function that calculates the correlation
 $$
 r^{2}_{x,y} = R^{\top}_{yx} \, R^{-1}_{yy} \, R_{yx}
 $$
+
 Where
 x = relwt and 
 y = (glufast, glutest, instest, sspg)
