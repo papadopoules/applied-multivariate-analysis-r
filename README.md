@@ -1,6 +1,6 @@
 # Multivariate Statistics Portfolio in R
 
-*A collection of applied multivariate methods including regression, PCA, robust statistics, discriminant analysis, canonical correlation, and symbolic data analysis.*
+*A collection of applied multivariate methods including regression, PCA, robust statistics, factor analysis, discriminant analysis, canonical correlation, and symbolic data analysis.*
 
 ---
 
@@ -18,111 +18,41 @@ The workflow across assignments includes:
 
 ---
 
-## Topics Covered
+01 – Descriptive multivariate analysis including covariance structure, eigenvalues, and graphical exploration
 
-### 1. Regression Analysis
+02 – Hierarchical and partitioning clustering methods applied to classify wine data
 
-* multiple linear regression (OLS)
-* robust regression (MM-estimation)
-* model diagnostics and comparison
-* cross-validation and prediction performance
+03 – cluster validation: evaluation of clustering results using internal validation criteria such as silhouette and gap statistic
 
-### 2. Principal Component Analysis (PCA)
+04 – Multiple and multivariate linear regression using least-squares estimation
 
-* dimensionality reduction and interpretation
-* loadings and score analysis
-* robust PCA methods
-* high-dimensional PCA using SVD
+05 – Robust regression methods (MM estimation) and diagnostics under outliers
 
-### 3. Advanced PCA Applications
+06 – Principal Component Analysis based on covariance/correlation matrices, interpretation via loadings and scores
 
-* PCA on handwriting (Alzheimer vs healthy)
-* image compression using PCA (X-ray data)
-* interpretation of variance structure and reconstruction
+07 – PCA via SVD for high dimensional data and application to image reconstruction
 
-### 4. Rotation and Factor Analysis
+08 – Rotated PCA via varimax rotation and factor analysis to identify latent structures
 
-* varimax rotation of principal components
-* factor analysis and latent structure interpretation
-* comparison between PCA and FA
+09 – Multiple correlation analysis of relationships between variable sets using multiple correlation (diabetes)
 
-### 5. Canonical Correlation Analysis
+10 – Canonical correlation analysis for associations between gene and protein data
 
-* relationships between variable sets
-* comparison of Pearson vs Spearman approaches
-* robust canonical correlation methods
-* permutation-based inference
+11 – Discriminant analysis with classification using LDA, QDA and robust methods, including decision boundaries
 
-### 6. Discriminant Analysis
+12 – Multiclass discriminant analysis: classification in high dimensional settings using PCA + LDA and cross validation
 
-* LDA, QDA, and robust variants
-* classification boundaries and visualization
-* model comparison using error rates
-* high-dimensional classification with PCA + LDA
-
-### 7. Symbolic Data Analysis
-
-* interval-valued data construction
-* classical vs robust aggregation
-* likelihood and robust model estimation
-* discriminant analysis and clustering for interval data
+13 – symbolic loan interval analysis: extension to interval-valued data including aggregation, robust estimation, and clustering
 
 ---
 
 ## Repository Structure
-
-```text
-multivariate-statistics/
-├── 01-regression-analysis/
-├── 02-pca/
-├── 03-advanced-pca/
-├── 04-rotation-factor-analysis/
-├── 05-canonical-correlation/
-├── 06-discriminant-analysis/
-├── 07-symbolic-data-analysis/
-└── README.md
-```
 
 Each folder contains:
 
 * `analysis.Rmd` → full analysis
 * `README.md` → rendered results
 * figures (if applicable)
-
----
-
-## Methods & Tools
-
-* **R packages**:
-
-  * `MASS`, `robustbase`, `rrcov`
-  * `cvTools`, `ccaPP`
-  * `ISLR`, `mlbench`, `pls`, `heplots`
-  * `MAINT.Data`, `pixmap`
-
-* **Techniques**:
-
-  * robust estimation
-  * cross-validation
-  * dimensionality reduction
-  * model-based clustering
-  * symbolic (interval) data modeling
-
----
-
-## Key Takeaways
-
-* Robust methods consistently improve stability in the presence of outliers.
-* PCA and factor analysis provide complementary insights into data structure.
-* High-dimensional problems require dimensionality reduction for reliable modeling.
-* Classification performance depends strongly on model assumptions (LDA vs QDA).
-* Symbolic data analysis extends classical methods by incorporating variability within observations.
-
----
-
-## Author
-
-**Georgios Papadopoulos**
 
 ---
 
