@@ -1,17 +1,15 @@
 Distance based clustering of wine cultivars
 ================
-Georgios Papadopoulos
+Georgios Papadopoulos \|
 2025-10-09
 
-# Preparation
+# 1. Scaling, Covariance, and Eigenstructure
 
 ``` r
 library(doBy)
 data(wine)
 wine_split <- split(wine[, -1], wine$Cult)
 ```
-
-# 1. Scaling, Covariance, and Eigenstructure
 
 This section compares the covariance structure and eigenvalues of the
 complete wine dataset with those computed within each cultivar group.
@@ -79,15 +77,7 @@ covariance include both within and between wine variation. For example
 v2 is naturally farther from the overall mean, so that wine group get
 higher mahalanobis distances and look like outliers.
 
-In contrast, when distances are computed separately for each wine type,
-each wine is compared only to the mean and covariance of its own group.
-The distances become smaller and fewer outliers appear because between
-wine group differences are no longer included.
-
-Inside each group, however, the wines are similar to their own group
-mean, so only a few true outliers appear.
-
-## All wines
+### All wines
 
 ``` r
 mahal_all <- mahalanobis(
@@ -99,7 +89,7 @@ mahal_all <- mahalanobis(
 #mahal_all
 ```
 
-## Group of wines
+### Group of wines
 
 ``` r
 mahal_groups <- lapply(wine_split, function(group_data) {
@@ -114,7 +104,15 @@ mahal_groups <- lapply(wine_split, function(group_data) {
 #mahal_groups
 ```
 
-Boxplot
+### Boxplot
+
+In contrast, when distances are computed separately for each wine type,
+each wine is compared only to the mean and covariance of its own group.
+The distances become smaller and fewer outliers appear because between
+wine group differences are no longer included.
+
+Inside each group, however, the wines are similar to their own group
+mean, so only a few true outliers appear.
 
 ``` r
 boxplot(list(
@@ -258,9 +256,12 @@ adjustedRandIndex(cluster_cut, wine$Cult)
 # 8. Comparing cluster assignments with true wine cultivars
 
 We have a strong agreement between ARI being moderate at 0.37 and the
-cluster table because: - v1 wines are clearly defined in the first
-cluster - a very mixed cluster with v1 and v2 overlapping the same with
-most obs being v3 - mostly v2 in the third cluster with many v3 mixed in
+cluster table because:
+
+- v1 wines are clearly defined in the first cluster
+- a very mixed cluster with v1 and v2 overlapping the same with most obs
+  being v3
+- mostly v2 in the third cluster with many v3 mixed in
 
 ``` r
 cluster_cut <- cutree(hcluster_wine, k = 3)
@@ -276,7 +277,7 @@ table(cluster_cut, wine$Cult)
 # 9. Distance and linkage choices in hierarchical clustering
 
 The distance measures for point to point obs we learned is Euclidean and
-Manhattan (page 20). Euclidean was used in task 6 so now we will compare
+Manhattan (page 20). Euclidean was used before so now we will compare
 Manhattan which is less sensitive to outliers to see which method
 computes the bigger ARI.
 
