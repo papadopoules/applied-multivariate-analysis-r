@@ -1,0 +1,399 @@
+Robust PCA and image compression
+================
+Georgios Papadopoulos \|
+2025-11-16
+
+*Applying classical and robust PCA to handwriting features and
+compression based on PCA compression to false-color xray images*
+
+# 1. PCA of handwriting features
+
+The darwinM dataset contains 19 handwriting measurements collected from
+two groups/classes of participants: healthy people `H` and patients
+diagnosed with Alzheimer’s `P`. Each participant completed 25
+standardized writing tasks and our data has the median per
+measurement/variable. The dataset includes variables describing timing,
+speed, acceleration, pressure, jerk etc.
+
+With following `summary(PCA)` I can conclude that cumulative proportion
+of PC1 and PC2 is 0.61, meaning that the first two components account
+for 61% of total variance in the data. So a large part of the
+multivariate dataset can be represented in a two-dimensional PCA plot,
+making PC1 and PC2 suitable for visualizing.
+
+# 1.1 Classical PCA and group separation
+
+I first produced the standard `biplot(pca)`. From the enlarged biplot it
+becomes clear which variables dominate PC1 and PC2:
+
+- The variables with the strongest loadings on PC1 are the ones that
+  point in horizontal direction. pressure_mean, pressure_var,
+  paper_time, air_time, disp_index, gmrt_in_air, gmrt_on_paper are the
+  variables that most contribute to PC1
+
+- The variables with the strongest loadings on PC2 are the ones that
+  point in vertical direction. mean_jerk_in_air, mean_jerk_on_paper,
+  max_x_extension, max_y_extension, mean_speed_in_air\_
+  mean_speed_on_paper, mean_acc_in_air, mean_acc_on_paper are the
+  variables that contribute to PC2
+
+So simplified we can vaguely say that PC1 is responsible capturing
+pressure, writing time and gmrt. Whereas PC2 is responsible for maximal
+extension, jerk, speed and accelaration.
+
+``` r
+load("darwinM.RData")
+
+X <- darwinM[, setdiff(names(darwinM), "class")]
+
+pca <- prcomp(X, center = TRUE, scale. = TRUE)
+
+summary(pca)
+```
+
+    ## Importance of components:
+    ##                           PC1    PC2    PC3     PC4     PC5     PC6    PC7
+    ## Standard deviation     2.8133 1.7320 1.3682 1.21247 0.82435 0.77677 0.7373
+    ## Proportion of Variance 0.4397 0.1667 0.1040 0.08167 0.03775 0.03352 0.0302
+    ## Cumulative Proportion  0.4397 0.6064 0.7104 0.79205 0.82980 0.86332 0.8935
+    ##                            PC8     PC9    PC10    PC11    PC12    PC13    PC14
+    ## Standard deviation     0.64779 0.63985 0.51293 0.48755 0.40070 0.37897 0.31564
+    ## Proportion of Variance 0.02331 0.02275 0.01462 0.01321 0.00892 0.00798 0.00553
+    ## Cumulative Proportion  0.91683 0.93958 0.95420 0.96740 0.97632 0.98430 0.98984
+    ##                           PC15   PC16    PC17    PC18
+    ## Standard deviation     0.24412 0.2402 0.20159 0.15830
+    ## Proportion of Variance 0.00331 0.0032 0.00226 0.00139
+    ## Cumulative Proportion  0.99315 0.9963 0.99861 1.00000
+
+``` r
+biplot(pca, cex = 0.7)
+```
+
+<img src="figures/unnamed-chunk-1-1.png" style="display: block; margin: auto;" />
+
+To doublecheck the loadings I visualized them in barplots like at the
+last exercise session.
+
+``` r
+loadings <- pca$rotation[,1:2]
+
+barplot(t(loadings),
+        beside = TRUE,
+        col = c("beige", "wheat"),
+        names.arg = rownames(loadings),
+        las = 2, cex.names = 0.5,
+        main = "Loadings for PC1 and PC2")
+legend("topright",
+       legend = c("PC1", "PC2"),
+       fill = c("beige", "wheat"))
+```
+
+<img src="figures/unnamed-chunk-2-1.png" style="display: block; margin: auto;" />
+
+Since the base R biplot does not color the groups, I decided to use the
+ggbiplot library so we can also see where are both classes of healthy
+people and patients with Alzheimer. This clarified how the two groups
+are positioned in the PCA space: healthy subjects lie mostly on the
+right side and patients on the left side
+
+``` r
+library(ggbiplot)
+
+ggbiplot(pca, groups = darwinM$class, ellipse = TRUE) +
+  scale_color_manual(values = c("H" = "limegreen", "P" = "tomato")) +
+  scale_fill_manual(values = c("H" = "limegreen", "P" = "tomato")) + theme_minimal()
+```
+
+<img src="figures/unnamed-chunk-3-1.png" style="display: block; margin: auto;" />
+
+# 1.2 Robust PCA diagnostics by group
+
+I splitted the dataset by using the labels H and P. Then I removed the
+19th variable which was the `class` variable. Afterwards applied robust
+PCA and created the diagnostic plots.
+
+As mentioned on page 82/129: the cutoff for the Score Distance SD is
+based on the $\chi^2_{k,0.975}$ threshold, since SD behaves like a
+Mahalanobis distance in the PCA score space. For the Orthogonal Distance
+OD, a cutoff is derived from the median and MAD of $OD^{2/3}$ which is
+approximately normal. Observations that pass either cutoff are flagged
+as outliers. In our case it is for OD\>4 or SD\>2.7
+
+- Observations can appear as outliers in score distance when their
+  projection onto the first two principal components lies far from the
+  center of the data cloud. This means that, within the PCA subspace,
+  these points have unusually large component scores compared to the
+  rest of the group.
+
+- Observations can appear as outliers in orthogonal distance when that
+  observation is poorly represented by the first two PCs, meaning much
+  of its variation is not included in the PCA space (here PC1 and PC2).
+  So these observations are captured in other PCs, like PC3 or PC4.
+
+In the healthy group, observations 165, 136, 9, and 68 go over the
+orthogonal distance cutoff, which means they contain variation that is
+not captured by the first two PCs. Healthy observations 103 and 166
+cross the score-distance cutoff, so they lie unusually far away within
+the PC1 PC2 space. No healthy subject crosses both cutoffs at the same
+time.
+
+In the patient group, observation 4 crosses the score-distance cutoff,
+while observations 7 and 19 cross both the score-distance and
+orthogonal-distance cutoffs. These two patients therefore stand out the
+most, because they are extreme both within the PC1–PC2 space and outside
+of it.
+
+``` r
+library(rrcov)
+
+healthy_df <- subset(darwinM, class == "H")
+patient_df <- subset(darwinM, class == "P")
+
+healthy  <- as.matrix(subset(darwinM, class=="H")[ , -19])
+patients <- as.matrix(subset(darwinM, class=="P")[ , -19])
+
+rpca_healthy  <- PcaHubert(healthy,  k = 2, scale = TRUE)
+rpca_patients <- PcaHubert(patients, k = 2, scale = TRUE)
+
+par(mfrow = c(1, 2))
+
+plot(rpca_healthy,  main = "Robust PCA for healthy")
+plot(rpca_patients, main = "Robust PCA for patients")
+```
+
+<img src="figures/unnamed-chunk-4-1.png" style="display: block; margin: auto;" />
+
+# 2. PCA based compression of an X-ray image
+
+By loading the xray pnm file which contains the picture of the xray, I
+conclude from the structure that indeed it consists of three matrices
+inside named red, blue, green. We see that the structure of each color
+matrix has p = 746 variables such as v1, v2, …, v746 and n = 1023
+observations.
+
+# 2.1 Reading and visualizing the image
+
+``` r
+library(pixmap)
+x <- read.pnm("xray.pnm")
+plot(x)
+```
+
+<img src="figures/unnamed-chunk-5-1.png" style="display: block; margin: auto;" />
+
+``` r
+str(x)
+```
+
+    ## Formal class 'pixmapRGB' [package "pixmap"] with 8 slots
+    ##   ..@ red     : num [1:1023, 1:746] 0.953 0.945 0.945 0.949 0.957 ...
+    ##   ..@ green   : num [1:1023, 1:746] 0.537 0.529 0.529 0.533 0.541 ...
+    ##   ..@ blue    : num [1:1023, 1:746] 0.00392 0 0 0 0.00784 ...
+    ##   ..@ channels: chr [1:3] "red" "green" "blue"
+    ##   ..@ size    : int [1:2] 1023 746
+    ##   ..@ cellres : num [1:2] 1 1
+    ##   ..@ bbox    : num [1:4] 0 0 746 1023
+    ##   ..@ bbcent  : logi FALSE
+
+``` r
+R <- x@red
+G <- x@green
+B <- x@blue
+```
+
+# 2.2 PCA reconstruction of RGB channels
+
+I selected prcomp() because it performs PCA with SVD which is stable for
+large matrices. Scaling the data is not necessary because scaling would
+artificially equalize the variances of the pixel columns and distort the
+brightness and color structure of the image.
+
+It is important to keep the original variance of the pixel intensities,
+because this variance has the visual information we want to keep in the
+picture reconstruction.
+
+``` r
+pca_R <- prcomp(R, center = TRUE, scale. = FALSE)
+pca_G <- prcomp(G, center = TRUE, scale. = FALSE)
+pca_B <- prcomp(B, center = TRUE, scale. = FALSE)
+```
+
+To select k, I visuallized the cumulative variance of each color and for
+k=10 all first 10 PCs explain more than 90% of the variance in their
+matrix.
+
+``` r
+par(mfrow = c(1, 3))
+
+#red
+var_exp_red <- pca_R$sdev^2 / sum(pca_R$sdev^2)
+cum_var_red <- cumsum(var_exp_red)
+
+plot(cum_var_red[1:746],
+     xlab = "746 Principal Components",
+     ylab = "Cumulative variance",
+     main = "Cum. variance  - red")
+abline(h = 0.9, col = "red", lty = 2)
+
+#green
+var_exp_green <- pca_G$sdev^2 / sum(pca_G$sdev^2)
+cum_var_green <- cumsum(var_exp_green)
+
+plot(cum_var_green[1:746],
+     xlab = "746 Principal Components",
+     ylab = "Cumulative variance",
+     main = "Cum. variance  - green")
+abline(h = 0.9, col = "red", lty = 2)
+
+#blue
+var_exp_blue <- pca_B$sdev^2 / sum(pca_B$sdev^2)
+cum_var_blue <- cumsum(var_exp_blue)
+
+plot(cum_var_blue[1:746],
+     xlab = "746 Principal Components",
+     ylab = "Cumulative variance",
+     main = "Cum. variance - blue")
+abline(h = 0.9, col = "red", lty = 2)
+```
+
+<img src="figures/unnamed-chunk-7-1.png" style="display: block; margin: auto;" />
+
+To reconstruct X with the first k PCs, I used following formulas from
+the lecture
+
+(5.22) $Z=(X-1\bar{x}^\top)\,\hat{\Gamma}̂$
+
+This is exactly what prcomp() computes:
+
+- `pca$x` = $Z$
+
+- `pca$rotation` = $\hat{\Gamma}$
+
+- `pca$center` = mean $\bar{x}$
+
+The second one is (5.35) X = Z $V^\top$ where:
+
+- `pca$rotation` = $\hat{\Gamma}̂ = V$ = our loadings
+
+Therefore I multiplied 5.22 with the inverse $\hat{\Gamma}̂^\top$ and it
+becomes: $$
+Z \hat{\Gamma}̂^\top =X-1\bar{x}^\top
+$$
+
+Since I centered the dataset for PCA, the mean is already included, so
+now just fixing the way the equation shows:
+
+$$
+X = Z \hat{\Gamma}̂^\top +1\bar{x}^\top
+$$ This is done by `xhat`. In the reconstruct function I had to add a
+limit on each observation for pixel creation as some estimations were
+out of \[0,1\].
+
+``` r
+k <- 10
+
+reconstruct <- function(pca){
+  Xhat <- pca$x[, 1:k] %*% t(pca$rotation[, 1:k])
+  Xhat <- Xhat + matrix(pca$center, nrow(Xhat), ncol(Xhat), byrow=TRUE)
+  Xhat[Xhat < 0] <- 0  #not related to PCA, it is for color intensity [0,1] 
+  Xhat[Xhat > 1] <- 1  #color intensity must be [0,1] for picture making 
+  return(Xhat)
+}
+
+R_rec <- reconstruct(pca_R)
+G_rec <- reconstruct(pca_G)
+B_rec <- reconstruct(pca_B)
+```
+
+Now I copied the x format and named it `x_rec` as my new reconstructed
+x. Then I simply plug now my new values into it for each color and plot.
+For k=10 we see that it did capture most of the variation in order to
+recreate the picture.
+
+``` r
+x_rec <- x
+x_rec@red   <- R_rec
+x_rec@green <- G_rec
+x_rec@blue  <- B_rec
+
+plot(x_rec)
+```
+
+<img src="figures/unnamed-chunk-9-1.png" style="display: block; margin: auto;" />
+
+# 2.3 Selecting the number of components
+
+Although PC1-PC10 capture 90% of total variance of the xray picture, it
+is not enough variance (in our case pixel variance) to visualize the
+details. So so of the details that we are missing, like the metal piece
+of the index finger, sharpness around the fingers etc, we would need to
+add additional PCs. To find the correct number of components we would
+need cumulative variance of the number of PCs to be close to 1. This
+happens around k=50 and following variance graph for a random color,
+like red, confirms that with k=50 we nearly approach total variance 99%.
+
+``` r
+par(mfrow = c(1, 2))
+
+plot(cum_var_red[1:50],
+     xlab = "746 Principal Components",
+     ylab = "Cumulative variance",
+     main = "Cum. variance  - red")
+abline(h = 0.99, col = "red", lty = 2)
+
+k <- 50
+
+reconstruct <- function(pca){
+  Xhat <- pca$x[, 1:k] %*% t(pca$rotation[, 1:k])
+  Xhat <- Xhat + matrix(pca$center, nrow(Xhat), ncol(Xhat), byrow=TRUE)
+  Xhat[Xhat < 0] <- 0  #not related to PCA, it is for color intensity [0,1] 
+  Xhat[Xhat > 1] <- 1  #color intensity must be [0,1] for picture making 
+  return(Xhat)
+}
+
+R_rec <- reconstruct(pca_R)
+G_rec <- reconstruct(pca_G)
+B_rec <- reconstruct(pca_B)
+
+x_rec <- x
+x_rec@red   <- R_rec
+x_rec@green <- G_rec
+x_rec@blue  <- B_rec
+
+plot(x_rec)
+```
+
+<img src="figures/unnamed-chunk-10-1.png" style="display: block; margin: auto;" />
+
+# 2.4 Compression factor
+
+To quantify the storage savings, we compare the size of the original RGB
+image with its PCA representation. The original image consists of three
+$1012 \cdot 746$ matrices: $$
+\text{original size} = 3 \cdot 1012 \cdot 746
+$$
+
+After PCA compression, each color channel requires $1012k$ scores,
+$746k$ loadings, and $746$ means. Thus the total number of stored values
+is
+
+$$
+\text{size}_{\text{PCA}} = 3 \bigl( 1012k + 746k + 746 \bigr).
+$$
+
+The compression factor is therefore $$
+\text{compression factor}(k)
+= \frac{1012 \cdot 746}{k(1012 + 746) + 746}
+$$
+
+For example, with k = 20 principal components we get CF(20) = 21 meaning
+that the PCA representation requires about 21 times less storage than
+the full image.
+
+``` r
+CF <- function(k){(1012 * 746) / (k * (1012 + 746) + 746)}
+
+CF(20)
+```
+
+    ## [1] 21.02579
