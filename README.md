@@ -1,6 +1,6 @@
-# Multivariate Statistics Portfolio in R
+# Applied Multivariate Statistics in R
 
-*A collection of applied multivariate methods including regression, PCA, robust statistics, factor analysis, discriminant analysis, canonical correlation, and symbolic data analysis.*
+*A portfolio of applied multivariate statistical analyses in R, covering regression, PCA, robust statistics, factor analysis, discriminant analysis, canonical correlation analysis, clustering and symbolic data analysis.*
 
 ---
 
@@ -18,31 +18,44 @@ The workflow across assignments includes:
 
 ---
 
-01 – Descriptive multivariate analysis including covariance structure, eigenvalues, and graphical exploration
+1. **Descriptive multivariate analysis**  
+   Graphical exploration, covariance, correlation, and eigenstructure in the iris dataset.
 
-02 – Hierarchical and partitioning clustering methods applied to classify wine data
+2. **Distance-based clustering**  
+   Hierarchical clustering and k-means applied to wine cultivar data.
 
-03 – cluster validation: evaluation of clustering results using internal validation criteria such as silhouette and gap statistic
+3. **Cluster validation**  
+   Calinski-Harabasz, Hartigan, silhouette, and gap statistics for selecting cluster solutions.
 
-04 – Multiple and multivariate linear regression using least-squares estimation
+4. **Multivariate linear regression**  
+   Joint prediction of college admissions outcomes.
 
-05 – Robust regression methods (MM estimation) and diagnostics under outliers
+5. **Robust regression**  
+   Least-squares and MM-estimation for college acceptance prediction under outliers.
 
-06 – Principal Component Analysis based on covariance/correlation matrices, interpretation via loadings and scores
+6. **Principal component analysis**  
+   PCA of wine characteristics and NIR spectral data using loadings, scores, and explained variance.
 
-07 – PCA via SVD for high dimensional data and application to image reconstruction
+7. **Robust PCA and image reconstruction**  
+   Robust PCA for handwriting data and PCA-based X-ray image reconstruction via SVD.
 
-08 – Rotated PCA via varimax rotation and factor analysis to identify latent structures
+8. **Rotated PCA and factor analysis**  
+   Varimax rotation and factor analysis for interpretable latent handwriting structures.
 
-09 – Multiple correlation analysis of relationships between variable sets using multiple correlation (diabetes)
+9. **Multiple correlation analysis**  
+   Relationships between relative weight and glucose-insulin biomarkers in diabetes data.
 
-10 – Canonical correlation analysis for associations between gene and protein data
+10. **Canonical correlation analysis**  
+    Associations between gene expression and protein measurements.
 
-11 – Discriminant analysis with classification using LDA, QDA and robust methods, including decision boundaries
+11. **Discriminant analysis**  
+    LDA, QDA, robust discriminant methods, and decision boundary visualization.
 
-12 – Multiclass discriminant analysis: classification in high dimensional settings using PCA + LDA and cross validation
+12. **Multiclass discriminant analysis**  
+    LDA, QDA, and PCA-assisted classification for high-dimensional data.
 
-13 – symbolic loan interval analysis: extension to interval-valued data including aggregation, robust estimation, and clustering
+13. **Symbolic interval data analysis**  
+    Interval-valued loan profiles using aggregation, robust estimation, discrimination, and clustering.
 
 ---
 
